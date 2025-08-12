@@ -305,7 +305,8 @@ export default function MainFeedTab() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>BE INSIDE WEB-3</Text>
-          <Text style={styles.subtitle}>Откройте для себя лучших создателей и сервисы</Text>
+          <Text style={styles.subtitle}>Earn with others</Text>
+          <Text style={styles.description}>Get referral links to other people's products and earn together</Text>
         </View>
 
         {/* Search Bar */}
@@ -323,17 +324,25 @@ export default function MainFeedTab() {
 
         {/* Featured Offers */}
         <View style={styles.offersSection} data-id="home-deals">
-          <Text style={styles.offersSectionTitle}>Лучшие предложения</Text>
+          <Text style={styles.offersSectionTitle}>Now is featured</Text>
           {isLoadingOffers ? (
-            <View style={styles.offersGrid}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.offersScrollContainer}
+            >
               <OfferCardSkeleton />
               <OfferCardSkeleton />
               <OfferCardSkeleton />
-            </View>
+            </ScrollView>
           ) : featuredOffers.length > 0 ? (
-            <View style={styles.offersGrid}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.offersScrollContainer}
+            >
               {featuredOffers.map((item) => renderOfferItem({ item }))}
-            </View>
+            </ScrollView>
           ) : (
             <View style={styles.emptyOffersContainer}>
               <EmptyState type="deals" />
@@ -501,7 +510,16 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
+    textAlign: 'center',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  description: {
+    fontSize: 14,
+    color: '#9ca3af',
     lineHeight: 24,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -554,7 +572,6 @@ const styles = StyleSheet.create({
   },
   offersSection: {
     marginBottom: 32,
-    paddingHorizontal: 16,
   },
   offersSectionTitle: {
     fontSize: 24,
@@ -562,12 +579,11 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     textAlign: 'center',
     marginBottom: 24,
+    paddingHorizontal: 16,
   },
-  offersGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 16,
+  offersScrollContainer: {
+    paddingHorizontal: 16,
+    paddingRight: 32,
   },
   emptyOffersContainer: {
     backgroundColor: '#ffffff',
@@ -582,8 +598,8 @@ const styles = StyleSheet.create({
   offerCard: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    width: '48%',
-    marginBottom: 16,
+    width: 280,
+    marginRight: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -593,7 +609,7 @@ const styles = StyleSheet.create({
   },
   offerImage: {
     width: '100%',
-    height: 140,
+    height: 120,
   },
   offerContent: {
     padding: 16,
