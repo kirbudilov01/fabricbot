@@ -150,16 +150,7 @@ export default function MyPageScreen() {
               <Text style={styles.pageName}>{pageSettings.publicName}</Text>
               <Text style={styles.pageUsername}>@{pageSettings.slug}</Text>
               <View style={styles.trustContainer}>
-                <Text style={styles.trustLabel}>Trust Level:</Text>
-                <View style={styles.heartsContainer}>
-                  {Array.from({ length: 5 }, (_, index) => (
-                    <Text key={index} style={[styles.heart, index < 4 ? styles.heartFilled : styles.heartEmpty]}>
-                      ♥
-                    </Text>
-                  ))}
-                </View>
-              </View>
-            </View>
+            <Text style={styles.trustLevel}>Trust Level: 4</Text>
           </View>
           <Text style={styles.pageBio}>{pageSettings.bio}</Text>
         </View>
@@ -545,25 +536,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  trustLabel: {
+  trustLevel: {
     fontSize: 14,
     color: '#6b7280',
-    marginRight: 8,
     fontWeight: '500',
-  },
-  heartsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  heart: {
-    fontSize: 16,
-    marginRight: 2,
-  },
-  heartFilled: {
-    color: '#EF4444',
-  },
-  heartEmpty: {
-    color: '#E5E7EB',
   },
   pageBio: {
     fontSize: 16,

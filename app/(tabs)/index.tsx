@@ -261,13 +261,7 @@ export default function MainFeedTab() {
       <View style={styles.personInfo}>
         <View style={styles.personHeader}>
           <Text style={styles.personName}>{item.name}</Text>
-          <View style={styles.trustContainer}>
-            {Array.from({ length: 5 }, (_, index) => (
-              <Text key={index} style={[styles.heart, index < item.trustLevel ? styles.heartFilled : styles.heartEmpty]}>
-                ♥
-              </Text>
-            ))}
-          </View>
+          <Text style={styles.trustNumber}>{item.trustLevel}</Text>
         </View>
         <Text style={styles.personUsername}>@{item.username}</Text>
         <Text style={styles.personBio} numberOfLines={2}>
@@ -686,15 +680,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  heart: {
-    fontSize: 12,
-    marginLeft: 2,
-  },
-  heartFilled: {
-    color: '#EF4444',
-  },
-  heartEmpty: {
-    color: '#E5E7EB',
+  trustNumber: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3B82F6',
+    backgroundColor: '#EBF4FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   personUsername: {
     fontSize: 14,
