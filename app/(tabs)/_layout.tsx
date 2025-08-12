@@ -1,11 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Chrome as Home, Users, Wallet, Link2, Settings, Crown } from 'lucide-react-native';
 import { Platform } from 'react-native';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export default function TabLayout() {
-  const tabBarHeight = useBottomTabBarHeight();
-
   return (
     <Tabs
       screenOptions={{
