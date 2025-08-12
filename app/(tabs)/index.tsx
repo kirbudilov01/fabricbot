@@ -304,8 +304,7 @@ export default function MainFeedTab() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>BE INSIDE WEB-3</Text>
-          <Text style={styles.subtitle}>Earn with others</Text>
+          <Text style={styles.title}>EARN WITH OTHERS</Text>
           <Text style={styles.description}>Get referral links to other people's products and earn together</Text>
         </View>
 
@@ -502,24 +501,19 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: '#1f2937',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
     textAlign: 'center',
-    fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 16,
+    letterSpacing: 1,
   },
   description: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#9ca3af',
     lineHeight: 24,
     textAlign: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   searchContainer: {
     paddingHorizontal: 16,
