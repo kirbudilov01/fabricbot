@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Wallet, TrendingUp, Clock, ArrowUpRight, ArrowDownRight, CreditCard, ChartBar as BarChart3, X, Users } from 'lucide-react-native';
+import { Wallet, TrendingUp, Clock, ArrowUpRight, ArrowDownRight, CreditCard, ChartBar as BarChart3, X, Users, ChevronUp } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAppData } from '@/src/shared/lib/store';
@@ -300,8 +300,9 @@ export default function BalanceTab() {
             </View>
           </View>
           <View style={styles.pendingRight}>
-          <View style={styles.pendingBadge}>
-            <Text style={styles.pendingBadgeText}>awaiting confirmation</Text>
+            <View style={styles.pendingBadge}>
+              <Text style={styles.pendingBadgeText}>awaiting confirmation</Text>
+            </View>
           </View>
         </TouchableOpacity>
 
