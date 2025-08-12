@@ -112,10 +112,10 @@ const recentPeople = [
     name: 'KIRILL BUDILOV',
     username: 'kirbudilov',
     bio: 'Founder Trendvi and creator of AI solutions for bloggers',
-    avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150',
+    avatar: 'https://yt3.ggpht.com/k3Pn64o9Ge84P_xduTdgOwbtQR8JnOj2lbpL00BpURbRX38Wq4YU0dDbNnkVL6iiUciH2eg06w=s88-c-k-c0x00ffffff-no-rj',
     rating: 4.9,
     completedOrders: 127,
-    trustLevel: 5,
+    trustLevel: '5 ♥♥♥♥♥',
     categories: ['Development', 'Design'],
   },
   {
@@ -124,7 +124,7 @@ const recentPeople = [
     username: 'maria_dev',
     bio: 'Full-stack developer specializing in React and Node.js',
     avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150',
-    trustLevel: 4,
+    trustLevel: '4 ♥♥♥♥♡',
     completedOrders: 89,
     categories: ['Development', 'Web'],
   },
@@ -134,7 +134,7 @@ const recentPeople = [
     username: 'ivan_writer',
     bio: 'Content writer and copywriter for digital marketing',
     avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150',
-    trustLevel: 3,
+    trustLevel: '3 ♥♥♥♡♡',
     completedOrders: 156,
     categories: ['Writing', 'Marketing'],
   },
@@ -144,7 +144,7 @@ const recentPeople = [
     username: 'kate_photo',
     bio: 'Professional photographer for events and portraits',
     avatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150',
-    trustLevel: 5,
+    trustLevel: '5 ♥♥♥♥♥',
     completedOrders: 203,
     categories: ['Photography', 'Events'],
   },
@@ -154,7 +154,7 @@ const recentPeople = [
     username: 'dmitry_video',
     bio: 'Video editor and motion graphics specialist',
     avatar: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=150',
-    trustLevel: 4,
+    trustLevel: '4 ♥♥♥♥♡',
     completedOrders: 74,
     categories: ['Video', 'Animation'],
   },
@@ -278,7 +278,7 @@ export default function MainFeedTab() {
           </View>
         </View>
       </View>
-      <ChevronRight size={20} color="#9CA3AF" strokeWidth={2} />
+      <Text style={styles.trustNumber}>{item.trustLevel}</Text>
     </TouchableOpacity>
   );
 
