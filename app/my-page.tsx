@@ -121,16 +121,29 @@ export default function MyPageScreen() {
         </View>
 
         {/* Referral Badge */}
-        {referralUser && (
-          <View style={styles.referralBadge} data-id="badge-ref">
-            <Users size={16} color="#3B82F6" strokeWidth={2} />
-            <Text style={styles.referralText}>Referral: {referralUser}</Text>
-          </View>
-        )}
 
         {/* Page Info */}
         <View style={styles.pageInfo}>
-          <Text style={styles.pageName}>{pageSettings.publicName}</Text>
+          <View style={styles.userHeader}>
+            <Image
+              source={{ uri: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150' }}
+              style={styles.userAvatar}
+            />
+            <View style={styles.userInfo}>
+              <Text style={styles.pageName}>{pageSettings.publicName}</Text>
+              <Text style={styles.pageUsername}>@{pageSettings.slug}</Text>
+              <View style={styles.trustContainer}>
+                <Text style={styles.trustLabel}>Trust Level:</Text>
+                <View style={styles.heartsContainer}>
+                  {Array.from({ length: 5 }, (_, index) => (
+                    <Text key={index} style={[styles.heart, index < 4 ? styles.heartFilled : styles.heartEmpty]}>
+                      ♥
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            </View>
+          </View>
           <Text style={styles.pageBio}>{pageSettings.bio}</Text>
         </View>
 
@@ -477,11 +490,54 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  userHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  userAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginRight: 16,
+  },
+  userInfo: {
+    flex: 1,
+  },
   pageName: {
     fontSize: 24,
     fontWeight: '700',
     color: '#1f2937',
     marginBottom: 8,
+  },
+  pageUsername: {
+    fontSize: 16,
+    color: '#3B82F6',
+    marginBottom: 12,
+  },
+  trustContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  trustLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginRight: 8,
+    fontWeight: '500',
+  },
+  heartsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  heart: {
+    fontSize: 16,
+    marginRight: 2,
+  },
+  heartFilled: {
+    color: '#EF4444',
+  },
+  heartEmpty: {
+    color: '#E5E7EB',
   },
   pageBio: {
     fontSize: 16,
