@@ -177,7 +177,7 @@ export default function MainFeedTab() {
   };
 
   const renderOfferItem = ({ item }: { item: any }) => (
-    <View style={styles.offerCard} data-id={`offer-${item.id}`}>
+    <View key={item.id} style={styles.offerCard} data-id={`offer-${item.id}`}>
       <Image source={{ uri: item.coverUrl }} style={styles.offerImage} />
       <View style={styles.offerContent}>
         <View style={styles.offerHeader}>
@@ -204,6 +204,7 @@ export default function MainFeedTab() {
 
   const renderPersonItem = ({ item }: { item: any }) => (
     <TouchableOpacity
+      key={item.id}
       style={styles.personCard}
       onPress={() => handlePersonPress(item)}
       data-id={`person-${item.id}`}
@@ -285,7 +286,7 @@ export default function MainFeedTab() {
               contentContainerStyle={styles.offersContainer}
               bounces={false}
             >
-              {featuredOffers.map((item) => renderOfferItem({ item, key: item.id }))}
+              {featuredOffers.map((item) => renderOfferItem({ item }))}
             </ScrollView>
           ) : (
             <View style={styles.emptyOffersContainer}>
@@ -310,7 +311,7 @@ export default function MainFeedTab() {
             </View>
           ) : recentPeople.length > 0 ? (
             <View>
-              {recentPeople.map((item) => renderPersonItem({ item, key: item.id }))}
+              {recentPeople.map((item) => renderPersonItem({ item }))}
             </View>
           ) : (
             <EmptyState type="creators" />
