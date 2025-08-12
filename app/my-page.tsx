@@ -148,6 +148,7 @@ export default function MyPageScreen() {
             <View style={styles.userInfo}>
               <Text style={styles.pageName}>{pageSettings.publicName}</Text>
               <Text style={styles.pageUsername}>@{pageSettings.slug}</Text>
+              <Text style={styles.pageFounder}>Founder Trendvi and creator of AI solutions for bloggers</Text>
               <View style={styles.trustContainer}>
                 <Text style={styles.trustLevel}>29 ♥</Text>
               </View>
@@ -530,6 +531,12 @@ const styles = StyleSheet.create({
   pageUsername: {
     fontSize: 16,
     color: '#3B82F6',
+    marginBottom: 8,
+  },
+  pageFounder: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontStyle: 'italic',
     marginBottom: 12,
   },
   trustContainer: {
