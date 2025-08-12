@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Wallet, TrendingUp, Clock, ArrowUpRight, ArrowDownRight, CreditCard, ChartBar as BarChart3, X, Users } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppData } from '@/src/shared/lib/store';
+import * as api from '@/src/shared/api/methods';
 
 const topReferrals = [
   { id: '1', username: '@alex_designer', totalEarned: '45.50', deals: 12 },

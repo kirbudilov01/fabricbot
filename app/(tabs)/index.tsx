@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Star, Users, ChevronRight, CreditCard, X, CircleCheck as CheckCircle, StickyNote } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppData } from '@/src/shared/lib/store';
+import * as api from '@/src/shared/api/methods';
 import { OfferCardSkeleton, PersonCardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
 
@@ -136,20 +137,27 @@ export default function MainFeedTab() {
 
   const handleProceedToPay = () => {
     if (agreeTerms && selectedOffer) {
-      // Add deal to store
-      addDeal({
+      // Create deal via API
+      api.createDeal({
         productId: selectedOffer.id,
         title: selectedOffer.title,
         amountFBC: selectedOffer.price,
         role: 'creator',
         status: 'pending',
         date: new Date().toISOString().split('T')[0]
-      });
-      
-      setPayModal(false);
-      setPaymentSuccess(true);
-      setAgreeTerms(false);
-      setPaymentNote('');
+      })
+        .then((newDeal) => {
+          // Update local store
+          addDeal(newDeal);
+          
+          setPayModal(false);
+          setPaymentSuccess(true);
+          setAgreeTerms(false);
+          setPaymentNote('');
+        })
+        .catch(() => {
+          // Toast will be shown by API client error handling
+        });
     }
   };
 

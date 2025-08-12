@@ -11,8 +11,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Clock, User, Users, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppData } from '@/src/shared/lib/store';
+import * as api from '@/src/shared/api/methods';
 import { PendingDealSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
+import { useState } from 'react';
 
 export default function PendingDealsScreen() {
   const router = useRouter();
@@ -22,26 +24,31 @@ export default function PendingDealsScreen() {
   const pendingDeals = data.deals.filter(deal => deal.status === 'pending');
 
   const handleConfirm = (deal: any) => {
-    // 1. Set deal status to 'released'
-    updateDeal(deal.id, { status: 'released' });
-    
-    // 2. Add ledger entries
-    // Creator gets the full amount
-    addLedgerEntry({
-      kind: 'release',
-      amountFBC: deal.amountFBC,
-      date: new Date().toISOString().split('T')[0]
-    });
-    
-    // If there's a referral, add ref bonus (assuming 10% of deal amount)
-    if (deal.refUsername) {
-      const refBonus = (parseFloat(deal.amountFBC) * 0.1).toFixed(2);
-      addLedgerEntry({
-        kind: 'ref_bonus',
-        amountFBC: refBonus,
-        date: new Date().toISOString().split('T')[0]
+    api.confirmDeal(deal.id)
+      .then((confirmedDeal) => {
+        // Update local store
+        updateDeal(deal.id, { status: 'released' });
+        
+        // Add ledger entries
+        addLedgerEntry({
+          kind: 'release',
+          amountFBC: deal.amountFBC,
+          date: new Date().toISOString().split('T')[0]
+        });
+        
+        // If there's a referral, add ref bonus (assuming 10% of deal amount)
+        if (deal.refUsername) {
+          const refBonus = (parseFloat(deal.amountFBC) * 0.1).toFixed(2);
+          addLedgerEntry({
+            kind: 'ref_bonus',
+            amountFBC: refBonus,
+            date: new Date().toISOString().split('T')[0]
+          });
+        }
+      })
+      .catch(() => {
+        // Toast will be shown by API client error handling
       });
-    }
   };
 
   const renderDealItem = ({ item }: { item: any }) => (

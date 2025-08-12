@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Settings, Plus, CreditCard as Edit, Trash2, X, ChevronDown, ChevronRight, Save, Eye, EyeOff, Image as ImageIcon, GripVertical, Link2, Copy, Users } from 'lucide-react-native';
 import { useAppData } from '@/src/shared/lib/store';
+import * as api from '@/src/shared/api/methods';
 import type { Category, Subcategory, Product, PageSettings, PaymentLink } from '@/src/shared/lib/store';
 import { LinkItemSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
@@ -99,8 +100,14 @@ export default function PageSetupTab() {
   };
 
   const handleSavePageSettings = () => {
-    updatePageSettings(tempPageSettings);
-    setPageSettingsModal(false);
+    api.savePageSettings(tempPageSettings)
+      .then((updatedSettings) => {
+        updatePageSettings(updatedSettings);
+        setPageSettingsModal(false);
+      })
+      .catch(() => {
+        // Toast will be shown by API client error handling
+      });
   };
 
   const handleAddCategory = () => {
@@ -119,18 +126,31 @@ export default function PageSetupTab() {
     if (!categoryForm.name.trim()) return;
 
     if (editingCategory) {
-      updateCategory(editingCategory.id, { 
+      api.updateCategory(editingCategory.id, { 
         name: categoryForm.name, 
         visible: categoryForm.visible 
-      });
+      })
+        .then((updatedCategory) => {
+          updateCategory(editingCategory.id, updatedCategory);
+          setCategoryModal(false);
+        })
+        .catch(() => {
+          // Toast will be shown by API client error handling
+        });
     } else {
-      addCategory({
+      api.createCategory({
         name: categoryForm.name,
         visible: categoryForm.visible,
         subcategories: []
-      });
+      })
+        .then((newCategory) => {
+          addCategory(newCategory);
+          setCategoryModal(false);
+        })
+        .catch(() => {
+          // Toast will be shown by API client error handling
+        });
     }
-    setCategoryModal(false);
   };
 
   const handleDeleteCategory = (categoryId: string) => {
@@ -142,7 +162,15 @@ export default function PageSetupTab() {
         { 
           text: 'Delete', 
           style: 'destructive',
-          onPress: () => deleteCategory(categoryId)
+          onPress: () => {
+            api.deleteCategory(categoryId)
+              .then(() => {
+                deleteCategory(categoryId);
+              })
+              .catch(() => {
+                // Toast will be shown by API client error handling
+              });
+          }
         }
       ]
     );
@@ -189,7 +217,339 @@ export default function PageSetupTab() {
     if (!productForm.title.trim() || !productForm.price.trim()) return;
 
     if (editingProduct) {
-      updateProduct(
+      api.updateProduct(editingProduct.product.id, {
+        title: productForm.title,
+        price: productForm.price,
+        description: productForm.description,
+        coverUrl: productForm.coverUrl
+      })
+        .then((updatedProduct) => {
+          updateProduct(
+            editingProduct.categoryId,
+            editingProduct.subcategoryId,
+            editingProduct.product.id,
+            updatedProduct
+          );
+          setProductModal(false);
+        })
+        .catch(() => {
+          // Toast will be shown by API client error handling
+        });
+    } else {
+      api.createProduct({
+        title: productForm.title,
+        price: productForm.price,
+        description: productForm.description,
+        coverUrl: productForm.coverUrl,
+        categoryId: productForm.categoryId,
+        subcategoryId: productForm.subcategoryId
+      })
+        .then((newProduct) => {
+          addProduct(productForm.categoryId, productForm.subcategoryId, newProduct);
+          setProductModal(false);
+        })
+        .catch(() => {
+          // Toast will be shown by API client error handling
+        });
+    }
+  };
+
+  const handleCreatePersonalLink = () => {
+    if (!linkForm.username.trim() || (!linkForm.productId && !linkForm.customProductTitle.trim())) return;
+
+    const productTitle = linkForm.isCustomProduct ? linkForm.customProductTitle : linkForm.productTitle;
+    const productId = linkForm.isCustomProduct ? `custom-${Date.now()}` : linkForm.productId;
+    
+    addLink({
+      username: linkForm.username,
+      productId: productId,
+      productTitle: productTitle,
+      link: `t.me/your_bot?startapp=product=${productId}&ref=${linkForm.username.replace('@', '')}`,
+      createdAt: new Date().toISOString().split('T')[0]
+    });
+    
+    setCreateLinkModal(false);
+    setLinkForm({ 
+      username: '', 
+      productId: '', 
+      productTitle: '',
+      customProductTitle: '',
+      customPrice: '',
+      referralUsername: '',
+      referralAmount: '',
+      isCustomProduct: false
+    });
+  };
+
+  const handleCopyLink = (link: string) => {
+    // In real app, copy to clipboard
+    Alert.alert('Copied', `Link copied: ${link}`);
+  };
+
+  const handleDeletePersonalLink = (linkId: string) => {
+    Alert.alert(
+      'Delete Link',
+      'Are you sure you want to delete this personal link?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: () => deleteLink(linkId)
+        }
+      ]
+    );
+  };
+  return (
+    <SafeAreaView style={styles.container} data-id="tab-page-setup">
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Configure My Page</Text>
+          <Text style={styles.subtitle}>Manage your profile and products</Text>
+        </View>
+
+        {/* Main Actions */}
+        <View style={styles.mainActionsSection}>
+          <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={() => {
+              setTempPageSettings(pageSettings);
+              setPageSettingsModal(true);
+            }}
+            data-id="btn-configure-page"
+          >
+            <View style={styles.actionCardLeft}>
+              <View style={[styles.actionCardIcon, { backgroundColor: '#EBF4FF' }]}>
+                <Settings size={24} color="#3B82F6" strokeWidth={2} />
+              </View>
+              <View style={styles.actionCardInfo}>
+                <Text style={styles.actionCardTitle}>Page Settings</Text>
+                <Text style={styles.actionCardSubtitle}>Name, bio, and profile settings</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color="#9CA3AF" strokeWidth={2} />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={() => setPersonalLinksModal(true)}
+            data-id="links-mode-view"
+          >
+            <View style={styles.actionCardLeft}>
+              <View style={[styles.actionCardIcon, { backgroundColor: '#F0FDF4' }]}>
+                <Link2 size={24} color="#10B981" strokeWidth={2} />
+              </View>
+              <View style={styles.actionCardInfo}>
+                <Text style={styles.actionCardTitle}>Personal Links</Text>
+                <Text style={styles.actionCardSubtitle}>Generate custom referral links</Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color="#9CA3AF" strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Categories Section */}
+        <View style={styles.categoriesSection}>
+        {/* Payment History Section */}
+        <View style={styles.paymentHistorySection}>
+          <Text style={styles.sectionTitle}>Payment Receipt + Referral Payout</Text>
+          
+          {isLoadingHistory ? (
+            <View style={styles.historyList} data-id="list-links">
+              <LinkItemSkeleton />
+              <LinkItemSkeleton />
+              <LinkItemSkeleton />
+            </View>
+          ) : data.deals.length > 0 ? (
+            <View style={styles.historyList} data-id="list-links">
+              {data.deals.map((deal) => (
+                <View key={deal.id} style={styles.historyItem}>
+                  <View style={styles.historyContent}>
+                    <View style={styles.historyLeft}>
+                      <Text style={styles.historyTitle}>{deal.title || 'Deal'}</Text>
+                      <Text style={styles.historyAmount}>{deal.amountFBC} FBC</Text>
+                      <Text style={styles.historyDate}>{deal.date}</Text>
+                      <View style={styles.historyUsers}>
+                        <Text style={styles.historyPaidBy}>Paid by @user</Text>
+                        {deal.refUsername && (
+                          <Text style={styles.historyReferral}>Referral {deal.refUsername}</Text>
+                        )}
+                      </View>
+                    </View>
+                    <View style={styles.historyRight}>
+                      <View style={[
+                        styles.historyStatusChip,
+                        { backgroundColor: deal.status === 'released' ? '#F0FDF4' : '#FEF3C7' }
+                      ]}>
+                        <Text style={[
+                          styles.historyStatusText,
+                          { color: deal.status === 'released' ? '#10B981' : '#D97706' }
+                        ]}>
+                          {deal.status === 'released' ? 'Payment received' : 'Pending'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyHistory} data-id="list-links">
+              <EmptyState 
+                type="links" 
+                onAction={() => setCreateLinkModal(true)}
+                actionText="Create payment link"
+              />
+            </View>
+          )}
+        </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Categories & Products</Text>
+            <TouchableOpacity style={styles.addButton} onPress={handleAddCategory} data-id="cfg-btn-add-category">
+              <Plus size={20} color="#3B82F6" strokeWidth={2} />
+              <Text style={styles.addButtonText}>Add Category</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View data-id="cfg-list-categories">
+            {categories.map((category) => {
+              const isCategoryExpanded = expandedCategories.includes(category.id);
+
+              return (
+                <View key={category.id} style={styles.categoryCard}>
+                  <View style={styles.categoryHeader}>
+                    <TouchableOpacity
+                      style={styles.categoryTitleContainer}
+                      onPress={() => toggleCategory(category.id)}
+                    >
+                      <Text style={styles.categoryTitle}>{category.name}</Text>
+                      {isCategoryExpanded ? (
+                        <ChevronDown size={20} color="#6b7280" strokeWidth={2} />
+                      ) : (
+                        <ChevronRight size={20} color="#6b7280" strokeWidth={2} />
+                      )}
+                    </TouchableOpacity>
+                    
+                    <View style={styles.categoryActions}>
+                      <TouchableOpacity
+                        style={styles.visibilityButton}
+                        onPress={() => toggleCategoryVisibility(category.id)}
+                      >
+                        {category.visible ? (
+                          <Eye size={18} color="#10B981" strokeWidth={2} />
+                        ) : (
+                          <EyeOff size={18} color="#9CA3AF" strokeWidth={2} />
+                        )}
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => handleEditCategory(category)}
+                      >
+                        <Edit size={18} color="#6B7280" strokeWidth={2} />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => handleDeleteCategory(category.id)}
+                      >
+                        <Trash2 size={18} color="#EF4444" strokeWidth={2} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {isCategoryExpanded && (
+                    <View style={styles.subcategoriesContainer}>
+                      <TouchableOpacity
+                        style={styles.addSubcategoryButton}
+                        onPress={() => handleAddSubcategory(category.id)}
+                      >
+                        <Plus size={16} color="#6B7280" strokeWidth={2} />
+                        <Text style={styles.addSubcategoryText}>Add Subcategory</Text>
+                      </TouchableOpacity>
+
+                      {category.subcategories.map((subcategory) => {
+                        const isSubcategoryExpanded = expandedSubcategories.includes(subcategory.id);
+
+                        return (
+                          <View key={subcategory.id} style={styles.subcategoryCard}>
+                            <TouchableOpacity
+                              style={styles.subcategoryHeader}
+                              onPress={() => toggleSubcategory(subcategory.id)}
+                            >
+                              <Text style={styles.subcategoryTitle}>{subcategory.name}</Text>
+                              {isSubcategoryExpanded ? (
+                                <ChevronDown size={18} color="#9CA3AF" strokeWidth={2} />
+                              ) : (
+                                <ChevronRight size={18} color="#9CA3AF" strokeWidth={2} />
+                              )}
+                            </TouchableOpacity>
+
+                            {isSubcategoryExpanded && (
+                              <View style={styles.productsContainer}>
+                                <TouchableOpacity
+                                  style={styles.addProductButton}
+                                  onPress={() => handleAddProduct(category.id, subcategory.id)}
+                                  data-id="cfg-btn-add-product"
+                                >
+                                  <Plus size={14} color="#9CA3AF" strokeWidth={2} />
+                                  <Text style={styles.addProductText}>Add Product</Text>
+                                </TouchableOpacity>
+
+                                <View data-id="cfg-list-products">
+                                  {subcategory.products.length > 0 ? (
+                                    subcategory.products.map((product) => (
+                                      <View key={product.id} style={styles.productCard}>
+                                        <View style={styles.productInfo}>
+                                          <Text style={styles.productTitle}>{product.title}</Text>
+                                          <Text style={styles.productPrice}>{product.price} FBC</Text>
+                                        </View>
+                                        <View style={styles.productActions}>
+                                          <TouchableOpacity
+                                            style={styles.editProductButton}
+                                            onPress={() => {
+                                              setProductForm({
+                                                title: product.title,
+                                                price: product.price,
+                                                description: product.description,
+                                                coverUrl: product.coverUrl || '',
+                                                categoryId: category.id,
+                                                subcategoryId: subcategory.id
+                                              });
+                                              setEditingProduct({ product, categoryId: category.id, subcategoryId: subcategory.id });
+                                              setProductModal(true);
+                                            }}
+                                          >
+                                            <Edit size={16} color="#6B7280" strokeWidth={2} />
+                                          </TouchableOpacity>
+                                        </View>
+                                      </View>
+                                    ))
+                                  ) : (
+                                    <View style={styles.emptyProducts}>
+                                      <EmptyState 
+                                        type="products" 
+                                        onAction={() => handleAddProduct(category.id, subcategory.id)}
+                                        actionText="Add product"
+                                      />
+                                    </View>
+                                  )}
+                                </View>
+                              </View>
+                            )}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </ScrollView>
         editingProduct.categoryId,
         editingProduct.subcategoryId,
         editingProduct.product.id,

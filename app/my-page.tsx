@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronDown, ChevronUp, Copy, CreditCard, X, CircleCheck as CheckCircle, Users, ChevronRight, StickyNote } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppData } from '@/src/shared/lib/store';
+import * as api from '@/src/shared/api/methods';
 
 export default function MyPageScreen() {
   const router = useRouter();
@@ -61,8 +62,8 @@ export default function MyPageScreen() {
 
   const handleProceedToPay = () => {
     if (agreeTerms) {
-      // Add deal to store
-      addDeal({
+      // Create deal via API
+      api.createDeal({
         productId: selectedProduct.id,
         title: selectedProduct.title,
         amountFBC: selectedProduct.price,
@@ -70,12 +71,19 @@ export default function MyPageScreen() {
         role: 'creator',
         status: 'pending',
         date: new Date().toISOString().split('T')[0]
-      });
-      
-      setPayModal(false);
-      setPaymentSuccess(true);
-      setAgreeTerms(false);
-      setPaymentNote('');
+      })
+        .then((newDeal) => {
+          // Update local store
+          addDeal(newDeal);
+          
+          setPayModal(false);
+          setPaymentSuccess(true);
+          setAgreeTerms(false);
+          setPaymentNote('');
+        })
+        .catch(() => {
+          // Toast will be shown by API client error handling
+        });
     }
   };
 
