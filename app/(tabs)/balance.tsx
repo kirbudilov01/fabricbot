@@ -156,7 +156,7 @@ export default function BalanceTab() {
   };
 
   const renderReferralItem = ({ item }: { item: any }) => (
-    <View style={styles.referralItem}>
+    <View key={item.id} style={styles.referralItem}>
       <View style={styles.referralLeft}>
         <View style={styles.referralIcon}>
           <Users size={16} color="#10B981" strokeWidth={2} />
@@ -171,7 +171,7 @@ export default function BalanceTab() {
   );
 
   const renderTransaction = ({ item }: { item: any }) => (
-    <View style={styles.transactionItem}>
+    <View key={item.id} style={styles.transactionItem}>
       <View style={styles.transactionContent}>
         <View style={styles.transactionLeft}>
           <View style={styles.transactionIcon}>
@@ -203,7 +203,7 @@ export default function BalanceTab() {
   );
 
   const renderPayout = ({ item }: { item: any }) => (
-    <View style={styles.payoutItem}>
+    <View key={item.id} style={styles.payoutItem}>
       <View style={styles.payoutLeft}>
         <View style={styles.payoutIcon}>
           <CreditCard size={16} color="#8B5CF6" strokeWidth={2} />
@@ -222,7 +222,7 @@ export default function BalanceTab() {
   );
 
   const renderPendingTransaction = ({ item }: { item: any }) => (
-    <View style={styles.pendingTransactionItem}>
+    <View key={item.id} style={styles.pendingTransactionItem}>
       <View style={styles.pendingTransactionLeft}>
         <View style={[styles.transactionIcon, { backgroundColor: item.type === 'creator' ? '#EBF4FF' : '#F0FDF4' }]}>
           {item.type === 'creator' ? (
