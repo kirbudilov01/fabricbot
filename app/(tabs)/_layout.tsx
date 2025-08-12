@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Home, Users, Wallet, Link2, Settings, Crown } from 'lucide-react-native';
+import { Chrome as Home, Users, Wallet, Link2, Settings, Crown } from 'lucide-react-native';
 import { Platform } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
