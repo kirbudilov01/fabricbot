@@ -305,7 +305,7 @@ export default function MainFeedTab() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>EARN WITH OTHERS</Text>
-          <Text style={styles.description}>Get referral links to other people's products and earn together</Text>
+          <Text style={styles.subtitle}>Get referral links to other people's products and earn together</Text>
         </View>
 
         {/* Search Bar */}
@@ -499,21 +499,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 24,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: '700',
     color: '#1f2937',
     textAlign: 'center',
-    marginBottom: 16,
-    letterSpacing: 1,
+    marginBottom: 4,
+    letterSpacing: 0.5,
   },
-  description: {
+  subtitle: {
     fontSize: 16,
-    color: '#9ca3af',
-    lineHeight: 24,
+    color: '#6b7280',
     textAlign: 'center',
-    paddingHorizontal: 24,
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -568,11 +567,11 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   offersSectionTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#1f2937',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
     paddingHorizontal: 16,
   },
   offersScrollContainer: {

@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#1f2937',
     marginBottom: 4,

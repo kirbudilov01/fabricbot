@@ -428,17 +428,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: '700',
     color: '#1f2937',
     marginBottom: 4,
     textAlign: 'center',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
-    lineHeight: 24,
     textAlign: 'center',
   },
   totalBalanceCard: {
