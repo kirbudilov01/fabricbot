@@ -291,6 +291,7 @@ export default function BalanceTab() {
           style={styles.pendingCard}
           onPress={() => router.push('/pending-deals')}
           data-id="balance-pending-card"
+        >
           <View style={styles.pendingLeft}>
             <Clock size={20} color="#F59E0B" strokeWidth={2} />
             <View style={styles.pendingInfo}>
