@@ -106,7 +106,6 @@ export default function PendingDealsScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         scrollEventThrottle={16}

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Platform, LogBox } from 'react-native';
@@ -6,7 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { setToastCallback } from '@/src/shared/lib/store';
 import ToastMessage from '@/components/ToastMessage';
-import { useState } from 'react';
+import OnboardingFlow from '@/components/OnboardingFlow';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Silence logs in production
 if (Platform.OS === 'web' && process.env.NODE_ENV === 'production') {
@@ -33,6 +35,7 @@ declare global {
 export default function RootLayout() {
   useFrameworkReady();
   
+  const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'warning';
@@ -44,6 +47,19 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    // Check onboarding status
+    const checkOnboardingStatus = async () => {
+      try {
+        const onboardingStatus = await AsyncStorage.getItem('hasOnboarded');
+        setHasOnboarded(onboardingStatus === 'true');
+      } catch (error) {
+        console.error('Failed to check onboarding status:', error);
+        setHasOnboarded(false);
+      }
+    };
+
+    checkOnboardingStatus();
+
     setToastCallback((message, type) => {
       setToast({ message, type, visible: true });
     });
@@ -59,6 +75,26 @@ export default function RootLayout() {
   const hideToast = () => {
     setToast(prev => ({ ...prev, visible: false }));
   };
+
+  const handleOnboardingComplete = () => {
+    setHasOnboarded(true);
+  };
+
+  // Show loading state while checking onboarding status
+  if (hasOnboarded === null) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          {/* You can add a loading spinner here if needed */}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show onboarding if not completed
+  if (!hasOnboarded) {
+    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>

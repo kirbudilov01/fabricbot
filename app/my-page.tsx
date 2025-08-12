@@ -189,6 +189,7 @@ export default function MyPageScreen() {
           );
         })}
       </ScrollView>
+      </ScrollView>
 
       {/* Product Details Modal */}
       <Modal
