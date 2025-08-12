@@ -41,6 +41,18 @@ const DEFAULT_CONFIG: RequestConfig = {
   },
 };
 
+let toastCallback: ((message: string, type: 'success' | 'error' | 'warning') => void) | null = null;
+
+export function setToastCallback(callback: (message: string, type: 'success' | 'error' | 'warning') => void) {
+  toastCallback = callback;
+}
+
+function showToast(message: string, type: 'success' | 'error' | 'warning' = 'success') {
+  if (toastCallback) {
+    toastCallback(message, type);
+  }
+}
+
 // Error normalization function
 const normalizeError = (error: any): ApiError => {
   // If it's already normalized
@@ -196,6 +208,7 @@ const request = async <T = any>(
     return data;
   } catch (error) {
     const normalizedError = normalizeError(error);
+    showToast(normalizedError.message, 'error');
     throw normalizedError;
   }
 };
