@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Star, Users, ChevronRight, CreditCard, X, CircleCheck as CheckCircle, StickyNote } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAppData } from '@/src/shared/lib/store';
 import * as api from '@/src/shared/api/methods';
 import { OfferCardSkeleton, PersonCardSkeleton } from '@/components/SkeletonLoader';
@@ -106,6 +107,7 @@ const recentPeople = [
 
 export default function MainFeedTab() {
   const router = useRouter();
+  const tabBarHeight = useBottomTabBarHeight();
   const { data, addDeal } = useAppData();
   const { pageSettings } = data;
   const [searchQuery, setSearchQuery] = useState('');
@@ -223,9 +225,12 @@ export default function MainFeedTab() {
   );
 
   return (
-    <SafeAreaView style={styles.container} data-id="tab-main-feed">
+    <SafeAreaView style={styles.container} data-id="tab-home">
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          Platform.OS !== 'web' && { paddingBottom: tabBarHeight + 16 }
+        ]}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"

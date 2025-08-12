@@ -8,12 +8,18 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export default function ClanTab() {
+  const tabBarHeight = useBottomTabBarHeight();
+
   return (
     <SafeAreaView style={styles.container} data-id="tab-clan">
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          Platform.OS !== 'web' && { paddingBottom: tabBarHeight + 16 }
+        ]}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"

@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Crown, Users, Wallet, Link2, CircleUser as UserCircle, Search, Settings } from 'lucide-react-native';
+import { Home, Users, Wallet, Link2, Settings, Crown } from 'lucide-react-native';
 import { Platform } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
@@ -12,30 +12,39 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#ffffff',
-          borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+          borderTopWidth: 0,
           paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
           height: Platform.OS === 'ios' ? 88 : 64,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 8,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 12,
           ...(Platform.OS === 'web' && {
             position: 'fixed',
             bottom: 0,
             left: 0,
             right: 0,
             zIndex: 50,
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            backdropFilter: 'blur(20px)',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            paddingBottom: 'env(safe-area-inset-bottom, 8px)',
           }),
         },
         tabBarActiveTintColor: '#3B82F6',
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
           marginTop: 4,
+        },
+        tabBarActiveLabelStyle: {
+          fontWeight: '700',
+        },
+        tabBarInactiveLabelStyle: {
+          fontWeight: '500',
         },
         tabBarIconStyle: {
           marginTop: 4,
@@ -47,8 +56,9 @@ export default function TabLayout() {
         options={{
           title: 'Discover',
           tabBarIcon: ({ size, color }) => (
-            <Search size={size} color={color} strokeWidth={2} />
+            <Home size={size} color={color} strokeWidth={2} />
           ),
+          tabBarTestID: 'tab-home',
         }}
       />
       <Tabs.Screen
@@ -58,6 +68,7 @@ export default function TabLayout() {
           tabBarIcon: ({ size, color }) => (
             <Users size={size} color={color} strokeWidth={2} />
           ),
+          tabBarTestID: 'tab-clan',
         }}
       />
       <Tabs.Screen
@@ -67,6 +78,7 @@ export default function TabLayout() {
           tabBarIcon: ({ size, color }) => (
             <Wallet size={size} color={color} strokeWidth={2} />
           ),
+          tabBarTestID: 'tab-balance',
         }}
       />
       <Tabs.Screen
@@ -74,8 +86,9 @@ export default function TabLayout() {
         options={{
           title: 'Setup',
           tabBarIcon: ({ size, color }) => (
-            <Settings size={size} color={color} strokeWidth={2} />
+            <Link2 size={size} color={color} strokeWidth={2} />
           ),
+          tabBarTestID: 'tab-links',
         }}
       />
       <Tabs.Screen
@@ -85,6 +98,7 @@ export default function TabLayout() {
           tabBarIcon: ({ size, color }) => (
             <Crown size={size} color={color} strokeWidth={2} />
           ),
+          tabBarTestID: 'tab-account',
         }}
       />
     </Tabs>

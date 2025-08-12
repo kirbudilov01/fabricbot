@@ -11,8 +11,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CircleUser as UserCircle, Wallet, Briefcase, CreditCard, Bell, Settings, MessageSquare, ExternalLink, CircleAlert as AlertCircle } from 'lucide-react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export default function AccountTab() {
+  const tabBarHeight = useBottomTabBarHeight();
   const [notifications, setNotifications] = useState({
     deals: true,
     payouts: false,
@@ -21,7 +23,10 @@ export default function AccountTab() {
   return (
     <SafeAreaView style={styles.container} data-id="tab-account">
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          Platform.OS !== 'web' && { paddingBottom: tabBarHeight + 16 }
+        ]}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"

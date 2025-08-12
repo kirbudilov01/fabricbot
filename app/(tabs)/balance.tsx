@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Wallet, TrendingUp, Clock, ArrowUpRight, ArrowDownRight, CreditCard, ChartBar as BarChart3, X, Users } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAppData } from '@/src/shared/lib/store';
 import * as api from '@/src/shared/api/methods';
 
@@ -70,6 +71,7 @@ const pendingTransactions = [
 
 export default function BalanceTab() {
   const router = useRouter();
+  const tabBarHeight = useBottomTabBarHeight();
   const { data } = useAppData();
   const [activeTab, setActiveTab] = useState('referrals');
   const [pendingModal, setPendingModal] = useState(false);
@@ -238,7 +240,10 @@ export default function BalanceTab() {
   return (
     <SafeAreaView style={styles.container} data-id="tab-balance">
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          Platform.OS !== 'web' && { paddingBottom: tabBarHeight + 16 }
+        ]}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"

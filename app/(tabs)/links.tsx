@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Settings, Plus, CreditCard as Edit, Trash2, X, ChevronDown, ChevronRight, Save, Eye, EyeOff, Image as ImageIcon, GripVertical, Link2, Copy, Users } from 'lucide-react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAppData } from '@/src/shared/lib/store';
 import * as api from '@/src/shared/api/methods';
 import type { Category, Subcategory, Product, PageSettings, PaymentLink } from '@/src/shared/lib/store';
@@ -21,6 +22,7 @@ import { LinkItemSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
 
 export default function PageSetupTab() {
+  const tabBarHeight = useBottomTabBarHeight();
   const {
     data,
     addCategory,
@@ -316,9 +318,12 @@ export default function PageSetupTab() {
   };
 
   return (
-    <SafeAreaView style={styles.container} data-id="tab-page-setup">
+    <SafeAreaView style={styles.container} data-id="tab-links">
       <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          Platform.OS !== 'web' && { paddingBottom: tabBarHeight + 16 }
+        ]}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"
