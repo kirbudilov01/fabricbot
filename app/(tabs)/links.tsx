@@ -35,8 +35,8 @@ export default function PageSetupTab() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>МОЯ СТРАНИЦА И ССЫЛКИ</Text>
-          <Text style={styles.subtitle}>Управляйте своим профилем и продуктами</Text>
+          <Text style={styles.title}>MY PAGE & LINKS</Text>
+          <Text style={styles.subtitle}>Manage your profile and products</Text>
         </View>
 
         {/* Main Actions */}
@@ -79,7 +79,7 @@ export default function PageSetupTab() {
 
         {/* Payment History Section */}
         <View style={styles.paymentHistorySection}>
-          <Text style={styles.sectionTitle}>Чеки платежей + Реферальные выплаты</Text>
+          <Text style={styles.sectionTitle}>Payment Receipts + Referral Payouts</Text>
           
           {isLoadingHistory ? (
             <View style={styles.historyList} data-id="list-links">
