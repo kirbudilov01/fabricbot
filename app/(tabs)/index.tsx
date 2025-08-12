@@ -118,6 +118,8 @@ export default function MainFeedTab() {
   const [paymentNote, setPaymentNote] = useState('');
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
   const [isLoadingPeople, setIsLoadingPeople] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handlePersonPress = (person: any) => {
     // Navigate to person's page with their data
@@ -162,6 +164,15 @@ export default function MainFeedTab() {
           // Toast will be shown by API client error handling
         });
     }
+  };
+
+  const handleScroll = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setShowScrollTop(offsetY > 300);
+  };
+
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   };
 
   const renderOfferItem = ({ item }: { item: any }) => (
@@ -227,13 +238,16 @@ export default function MainFeedTab() {
   return (
     <SafeAreaView style={styles.container} data-id="tab-home">
       <ScrollView 
+        ref={scrollViewRef}
         contentContainerStyle={[
           styles.scrollContent,
-          Platform.OS !== 'web' && { paddingBottom: tabBarHeight + 16 }
+          { paddingBottom: tabBarHeight + 24 }
         ]}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -264,14 +278,14 @@ export default function MainFeedTab() {
               <OfferCardSkeleton />
             </ScrollView>
           ) : featuredOffers.length > 0 ? (
-            <FlatList
-              data={featuredOffers}
-              renderItem={renderOfferItem}
-              keyExtractor={(item) => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
               contentContainerStyle={styles.offersContainer}
-            />
+              bounces={false}
+            >
+              {featuredOffers.map((item) => renderOfferItem({ item }))}
+            </ScrollView>
           ) : (
             <View style={styles.emptyOffersContainer}>
               <EmptyState type="deals" />
@@ -294,18 +308,24 @@ export default function MainFeedTab() {
               <PersonCardSkeleton />
             </View>
           ) : recentPeople.length > 0 ? (
-            <FlatList
-              data={recentPeople}
-              renderItem={renderPersonItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
+            <View>
+              {recentPeople.map((item) => renderPersonItem({ item }))}
+            </View>
           ) : (
             <EmptyState type="creators" />
           )}
         </View>
       </ScrollView>
+
+      {/* Scroll to Top Button (Web Only) */}
+      {Platform.OS === 'web' && showScrollTop && (
+        <TouchableOpacity
+          style={styles.scrollToTopButton}
+          onPress={scrollToTop}
+        >
+          <ChevronUp size={24} color="#ffffff" strokeWidth={2} />
+        </TouchableOpacity>
+      )}
 
       {/* Pay Confirmation Modal */}
       <Modal
@@ -417,7 +437,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   header: {
     paddingHorizontal: 16,
@@ -874,5 +894,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1f2937',
     fontFamily: 'monospace',
+  },
+  scrollToTopButton: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 100,
   },
 });

@@ -21,6 +21,8 @@ export default function PendingDealsScreen() {
   const router = useRouter();
   const { data, updateDeal, addLedgerEntry } = useAppData();
   const [isLoading, setIsLoading] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
   
   const pendingDeals = data.deals.filter(deal => deal.status === 'pending');
 
@@ -50,6 +52,15 @@ export default function PendingDealsScreen() {
       .catch(() => {
         // Toast will be shown by API client error handling
       });
+  };
+
+  const handleScroll = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setShowScrollTop(offsetY > 300);
+  };
+
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   };
 
   const renderDealItem = ({ item }: { item: any }) => (
@@ -107,10 +118,13 @@ export default function PendingDealsScreen() {
       </View>
 
       <ScrollView 
+        ref={scrollViewRef}
         contentContainerStyle={styles.scrollContent}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
       >
         {isLoading ? (
           <View data-id="list-pending">
@@ -120,13 +134,7 @@ export default function PendingDealsScreen() {
           </View>
         ) : pendingDeals.length > 0 ? (
           <View data-id="list-pending">
-            <FlatList
-              data={pendingDeals}
-              renderItem={renderDealItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
+            {pendingDeals.map((item) => renderDealItem({ item }))}
           </View>
         ) : (
           <View style={styles.emptyState} data-id="list-pending">
@@ -134,6 +142,16 @@ export default function PendingDealsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Scroll to Top Button (Web Only) */}
+      {Platform.OS === 'web' && showScrollTop && (
+        <TouchableOpacity
+          style={styles.scrollToTopButton}
+          onPress={scrollToTop}
+        >
+          <ChevronUp size={24} color="#ffffff" strokeWidth={2} />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -171,7 +189,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   dealItem: {
     backgroundColor: '#ffffff',
@@ -292,5 +310,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
+  },
+  scrollToTopButton: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 100,
   },
 });

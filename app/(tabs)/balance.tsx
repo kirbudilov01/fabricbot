@@ -75,6 +75,8 @@ export default function BalanceTab() {
   const { data } = useAppData();
   const [activeTab, setActiveTab] = useState('referrals');
   const [pendingModal, setPendingModal] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Compute KPIs from store data
   const computeKPIs = () => {
@@ -142,6 +144,15 @@ export default function BalanceTab() {
       ref_payout_done: 'ref payout done',
     };
     return statusMap[status] || status;
+  };
+
+  const handleScroll = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setShowScrollTop(offsetY > 300);
+  };
+
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   };
 
   const renderReferralItem = ({ item }: { item: any }) => (
@@ -240,13 +251,16 @@ export default function BalanceTab() {
   return (
     <SafeAreaView style={styles.container} data-id="tab-balance">
       <ScrollView 
+        ref={scrollViewRef}
         contentContainerStyle={[
           styles.scrollContent,
-          Platform.OS !== 'web' && { paddingBottom: tabBarHeight + 16 }
+          { paddingBottom: tabBarHeight + 24 }
         ]}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -338,41 +352,33 @@ export default function BalanceTab() {
         <View style={styles.tabContent}>
           {activeTab === 'referrals' && (
             <View data-id="list-referrals">
-              <FlatList
-                data={topReferrals}
-                renderItem={renderReferralItem}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false}
-                showsVerticalScrollIndicator={false}
-              />
+              {topReferrals.map((item) => renderReferralItem({ item }))}
             </View>
           )}
 
           {activeTab === 'transactions' && (
             <View data-id="list-transactions">
-              <FlatList
-                data={mockTransactions}
-                renderItem={renderTransaction}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false}
-                showsVerticalScrollIndicator={false}
-              />
+              {mockTransactions.map((item) => renderTransaction({ item }))}
             </View>
           )}
 
           {activeTab === 'payouts' && (
             <View data-id="list-payouts">
-              <FlatList
-                data={mockPayouts}
-                renderItem={renderPayout}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false}
-                showsVerticalScrollIndicator={false}
-              />
+              {mockPayouts.map((item) => renderPayout({ item }))}
             </View>
           )}
         </View>
       </ScrollView>
+
+      {/* Scroll to Top Button (Web Only) */}
+      {Platform.OS === 'web' && showScrollTop && (
+        <TouchableOpacity
+          style={styles.scrollToTopButton}
+          onPress={scrollToTop}
+        >
+          <ChevronUp size={24} color="#ffffff" strokeWidth={2} />
+        </TouchableOpacity>
+      )}
 
       {/* Pending Transactions Modal */}
       <Modal
@@ -393,12 +399,13 @@ export default function BalanceTab() {
               </TouchableOpacity>
             </View>
 
-            <FlatList
-              data={pendingTransactions}
-              renderItem={renderPendingTransaction}
-              keyExtractor={(item) => item.id}
+            <ScrollView 
               showsVerticalScrollIndicator={false}
-            />
+              bounces={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {pendingTransactions.map((item) => renderPendingTransaction({ item }))}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -413,7 +420,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 24,
   },
   header: {
     marginBottom: 24,
@@ -828,5 +835,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#10B981',
     marginBottom: 4,
+  },
+  scrollToTopButton: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 100,
   },
 });

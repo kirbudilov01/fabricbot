@@ -25,11 +25,12 @@ export default function AccountTab() {
       <ScrollView 
         contentContainerStyle={[
           styles.scrollContent,
-          Platform.OS !== 'web' && { paddingBottom: tabBarHeight + 16 }
+          { paddingBottom: tabBarHeight + 24 }
         ]}
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
       >
         {/* Profile Header */}
         <View style={styles.profileHeader}>

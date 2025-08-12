@@ -106,6 +106,7 @@ export default function MyPageScreen() {
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
         <View style={styles.header}>

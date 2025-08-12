@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Plus, Edit, Trash2, X, ChevronDown, ChevronRight, Save, Eye, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, Plus, CreditCard as Edit, Trash2, X, ChevronDown, ChevronRight, Save, Eye, EyeOff } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppData } from '@/src/shared/lib/store';
 import * as api from '@/src/shared/api/methods';
@@ -154,6 +154,10 @@ export default function ConfigurePageScreen() {
     );
   };
 
+  const handleAddSubcategory = (categoryId: string) => {
+    // Implementation for adding subcategory
+  };
+
   const handleAddProduct = (categoryId: string, subcategoryId: string) => {
     setProductForm({
       title: '',
@@ -246,6 +250,7 @@ export default function ConfigurePageScreen() {
         scrollEventThrottle={16}
         bounces={false}
         contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
         <View style={styles.header}>
@@ -268,7 +273,6 @@ export default function ConfigurePageScreen() {
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{pageSettings.publicName}</Text>
             <Text style={styles.profileUsername}>@{pageSettings.slug}</Text>
-            <Text style={styles.profileBio}>{pageSettings.bio}</Text>
             <Text style={styles.profileBio}>{pageSettings.bio}</Text>
           </View>
           <TouchableOpacity
@@ -348,6 +352,8 @@ export default function ConfigurePageScreen() {
                       <TouchableOpacity
                         style={styles.addSubcategoryButton}
                         onPress={() => handleAddSubcategory(category.id)}
+                      >
+                      </TouchableOpacity>
                     <View style={styles.productsContainer}>
                       <View style={styles.productsHeader}>
                         <Text style={styles.productsTitle}>Products</Text>
@@ -414,6 +420,7 @@ export default function ConfigurePageScreen() {
                           />
                         </View>
                       )}
+                    </View>
                     </View>
                   )}
                 </View>
@@ -769,6 +776,12 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   deleteButton: {
+    padding: 8,
+  },
+  subcategoriesContainer: {
+    paddingHorizontal: 16,
+  },
+  addSubcategoryButton: {
     padding: 8,
   },
   productsContainer: {
