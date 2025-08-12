@@ -117,7 +117,6 @@ export default function MyPageScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         scrollEventThrottle={16}
@@ -212,7 +211,6 @@ export default function MyPageScreen() {
             </View>
           );
         })}
-      </ScrollView>
       </ScrollView>
 
       {/* Product Details Modal */}
@@ -541,28 +539,7 @@ const styles = StyleSheet.create({
   trustLevel: {
     fontSize: 14,
     color: '#6b7280',
-    marginRight: 8,
     fontWeight: '500',
-  },
-  trustLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginRight: 8,
-    fontWeight: '500',
-  },
-  heartsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  heart: {
-    fontSize: 16,
-    marginRight: 2,
-  },
-  heartFilled: {
-    color: '#EF4444',
-  },
-  heartEmpty: {
-    color: '#E5E7EB',
   },
   pageBio: {
     fontSize: 16,
