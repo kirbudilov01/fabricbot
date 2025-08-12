@@ -8,6 +8,7 @@ import {
   Image,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronDown, ChevronUp, Copy, CreditCard, X, CircleCheck as CheckCircle, Users, ChevronRight, StickyNote } from 'lucide-react-native';
@@ -100,6 +101,12 @@ export default function MyPageScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
+        bounces={false}
+        contentInsetAdjustmentBehavior="never"
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity

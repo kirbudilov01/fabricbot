@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Clock, User, Users, CircleCheck as CheckCircle } from 'lucide-react-native';
@@ -106,6 +107,12 @@ export default function PendingDealsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
+        bounces={false}
+        contentInsetAdjustmentBehavior="never"
+      >
         {isLoading ? (
           <View data-id="list-pending">
             <PendingDealSkeleton />

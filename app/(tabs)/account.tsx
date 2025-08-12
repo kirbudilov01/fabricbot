@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Switch,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CircleUser as UserCircle, Wallet, Briefcase, CreditCard, Bell, Settings, MessageSquare, ExternalLink, CircleAlert as AlertCircle } from 'lucide-react-native';
@@ -19,7 +20,12 @@ export default function AccountTab() {
 
   return (
     <SafeAreaView style={styles.container} data-id="tab-account">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
+        bounces={false}
+        contentInsetAdjustmentBehavior="never"
+      >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <Image

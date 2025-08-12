@@ -1,8 +1,11 @@
 import { Tabs } from 'expo-router';
 import { Crown, Users, Wallet, Link2, CircleUser as UserCircle, Search, Settings } from 'lucide-react-native';
 import { Platform } from 'react-native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 export default function TabLayout() {
+  const tabBarHeight = useBottomTabBarHeight();
+
   return (
     <Tabs
       screenOptions={{
@@ -19,6 +22,13 @@ export default function TabLayout() {
           shadowOpacity: 0.1,
           shadowRadius: 4,
           elevation: 8,
+          ...(Platform.OS === 'web' && {
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
+          }),
         },
         tabBarActiveTintColor: '#3B82F6',
         tabBarInactiveTintColor: '#9CA3AF',

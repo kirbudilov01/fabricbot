@@ -9,6 +9,7 @@ import {
   TextInput,
   FlatList,
   Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Star, Users, ChevronRight, CreditCard, X, CircleCheck as CheckCircle, StickyNote } from 'lucide-react-native';
@@ -223,7 +224,12 @@ export default function MainFeedTab() {
 
   return (
     <SafeAreaView style={styles.container} data-id="tab-main-feed">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
+        bounces={false}
+        contentInsetAdjustmentBehavior="never"
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Discover</Text>

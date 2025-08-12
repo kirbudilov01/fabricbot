@@ -5,13 +5,19 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ClanTab() {
   return (
     <SafeAreaView style={styles.container} data-id="tab-clan">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
+        bounces={false}
+        contentInsetAdjustmentBehavior="never"
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>FABRICBOT ECOSYSTEM</Text>

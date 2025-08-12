@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   FlatList,
   Modal,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Wallet, TrendingUp, Clock, ArrowUpRight, ArrowDownRight, CreditCard, ChartBar as BarChart3, X, Users } from 'lucide-react-native';
@@ -236,7 +237,12 @@ export default function BalanceTab() {
 
   return (
     <SafeAreaView style={styles.container} data-id="tab-balance">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
+        bounces={false}
+        contentInsetAdjustmentBehavior="never"
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>My Balance</Text>

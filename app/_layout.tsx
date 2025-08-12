@@ -1,10 +1,34 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View, Platform, LogBox } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { setToastCallback } from '@/src/shared/lib/store';
 import ToastMessage from '@/components/ToastMessage';
 import { useState } from 'react';
+
+// Silence logs in production
+if (Platform.OS === 'web' && process.env.NODE_ENV === 'production') {
+  LogBox.ignoreAllLogs(true);
+  console.log = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+  console.info = () => {};
+  console.debug = () => {};
+}
+
+// Telegram WebApp interface
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        ready: () => void;
+        expand: () => void;
+      };
+    };
+  }
+}
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -23,6 +47,13 @@ export default function RootLayout() {
     setToastCallback((message, type) => {
       setToast({ message, type, visible: true });
     });
+
+    // Initialize Telegram WebApp
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+    }
   }, []);
 
   const hideToast = () => {
@@ -30,17 +61,24 @@ export default function RootLayout() {
   };
 
   return (
-    <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-      <ToastMessage
-        message={toast.message}
-        type={toast.type}
-        visible={toast.visible}
-        onHide={hideToast}
-      />
-    </>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={{
+        flex: 1,
+        height: Platform.OS === 'web' ? '100vh' : '100%',
+        minHeight: Platform.OS === 'web' ? '100vh' : '100%',
+        backgroundColor: '#F7F8FA'
+      }}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+        <ToastMessage
+          message={toast.message}
+          type={toast.type}
+          visible={toast.visible}
+          onHide={hideToast}
+        />
+      </View>
+    </SafeAreaView>
   );
 }

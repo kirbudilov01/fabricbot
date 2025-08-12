@@ -10,6 +10,7 @@ import {
   FlatList,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Settings, Plus, CreditCard as Edit, Trash2, X, ChevronDown, ChevronRight, Save, Eye, EyeOff, Image as ImageIcon, GripVertical, Link2, Copy, Users } from 'lucide-react-native';
@@ -316,7 +317,12 @@ export default function PageSetupTab() {
 
   return (
     <SafeAreaView style={styles.container} data-id="tab-page-setup">
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        scrollEventThrottle={16}
+        bounces={false}
+        contentInsetAdjustmentBehavior="never"
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Configure My Page</Text>
