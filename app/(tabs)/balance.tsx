@@ -276,9 +276,8 @@ export default function BalanceTab() {
         <TouchableOpacity 
           style={styles.pendingCard}
           onPress={() => router.push('/pending-deals')}
-          data-id="btn-open-pending"
+          data-id="balance-pending-card"
         >
-          <View style={styles.pendingCard} data-id="kpi-pending">
           <View style={styles.pendingLeft}>
             <Clock size={20} color="#F59E0B" strokeWidth={2} />
             <View style={styles.pendingInfo}>
@@ -286,20 +285,20 @@ export default function BalanceTab() {
               <Text style={styles.pendingAmount}>{kpis.pendingAmount} FBC</Text>
             </View>
           </View>
+          <View style={styles.pendingRight}>
           <View style={styles.pendingBadge}>
             <Text style={styles.pendingBadgeText}>awaiting confirmation</Text>
-          </View>
           </View>
         </TouchableOpacity>
 
         {/* Top Up Button */}
-        <TouchableOpacity style={styles.topUpButton} data-id="btn-top-up">
+        <TouchableOpacity style={styles.topUpButton} data-id="btn-topup">
           <Wallet size={20} color="#10B981" strokeWidth={2} />
           <Text style={styles.topUpButtonText}>Top Up Balance</Text>
         </TouchableOpacity>
 
         {/* Withdraw Button */}
-        <TouchableOpacity style={styles.withdrawButton} data-id="btn-open-withdraw">
+        <TouchableOpacity style={styles.withdrawButton} data-id="btn-withdraw">
           <Wallet size={20} color="#ffffff" strokeWidth={2} />
           <Text style={styles.withdrawButtonText}>Withdraw</Text>
         </TouchableOpacity>
@@ -420,7 +419,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: '#1f2937',
     marginBottom: 4,
@@ -461,7 +460,7 @@ const styles = StyleSheet.create({
   },
   balanceGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
     marginBottom: 16,
   },
   balanceCard: {
@@ -482,7 +481,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   balanceAmount: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#1f2937',
   },
@@ -490,23 +489,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 18,
     padding: 20,
-    marginBottom: 20,
+    marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   pendingLeft: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flex: 1,
+    marginBottom: 12,
   },
   pendingInfo: {
     marginLeft: 12,
+    flex: 1,
   },
   pendingLabel: {
     fontSize: 14,
@@ -515,18 +513,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   pendingAmount: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#1f2937',
   },
+  pendingRight: {
+    alignItems: 'flex-end',
+  },
   pendingBadge: {
     backgroundColor: '#FEF3C7',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
+    alignSelf: 'flex-start',
   },
   pendingBadgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#D97706',
   },
@@ -538,7 +540,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 18,
-    marginBottom: 12,
+    marginBottom: 16,
     minHeight: 56,
     borderWidth: 2,
     borderColor: '#10B981',
@@ -549,7 +551,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   topUpButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#10B981',
     marginLeft: 8,
@@ -562,7 +564,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderRadius: 18,
-    marginBottom: 24,
+    marginBottom: 32,
     minHeight: 56,
     shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 4 },
@@ -571,7 +573,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   withdrawButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
     marginLeft: 8,
@@ -581,7 +583,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 4,
-    marginBottom: 20,
+    marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -613,7 +615,7 @@ const styles = StyleSheet.create({
   tabContent: {
     backgroundColor: '#ffffff',
     borderRadius: 20,
-    padding: 20,
+    padding: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
