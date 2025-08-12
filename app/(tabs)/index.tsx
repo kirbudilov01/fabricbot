@@ -28,7 +28,6 @@ const featuredOffers = [
     title: 'Logo Design Special',
     description: 'Professional logo design with 3 concepts',
     price: '50',
-    discount: '20%',
     author: 'Creative Studio',
     coverUrl: 'https://images.pexels.com/photos/196644/pexels-photo-196644.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
@@ -37,7 +36,6 @@ const featuredOffers = [
     title: 'Website Development',
     description: 'Full-stack website with modern design',
     price: '200',
-    discount: '15%',
     author: 'Dev Team Pro',
     coverUrl: 'https://images.pexels.com/photos/326502/pexels-photo-326502.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
@@ -46,9 +44,64 @@ const featuredOffers = [
     title: 'SMM Campaign',
     description: 'Social media marketing for your business',
     price: '100',
-    discount: '10%',
     author: 'Marketing Experts',
     coverUrl: 'https://images.pexels.com/photos/267389/pexels-photo-267389.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '4',
+    title: 'Brand Identity Package',
+    description: 'Complete brand identity with logo, colors, fonts',
+    price: '150',
+    author: 'Brand Studio',
+    coverUrl: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '5',
+    title: 'Mobile App Design',
+    description: 'UI/UX design for mobile applications',
+    price: '300',
+    author: 'App Designers',
+    coverUrl: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '6',
+    title: 'SEO Optimization',
+    description: 'Complete SEO audit and optimization',
+    price: '120',
+    author: 'SEO Experts',
+    coverUrl: 'https://images.pexels.com/photos/270637/pexels-photo-270637.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '7',
+    title: 'Content Writing',
+    description: 'Professional content for your website',
+    price: '80',
+    author: 'Content Writers',
+    coverUrl: 'https://images.pexels.com/photos/261662/pexels-photo-261662.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '8',
+    title: 'Video Production',
+    description: 'Professional video editing and production',
+    price: '250',
+    author: 'Video Pro',
+    coverUrl: 'https://images.pexels.com/photos/3945313/pexels-photo-3945313.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '9',
+    title: 'Photography Session',
+    description: 'Professional photo shoot for your business',
+    price: '180',
+    author: 'Photo Studio',
+    coverUrl: 'https://images.pexels.com/photos/1264210/pexels-photo-1264210.jpeg?auto=compress&cs=tinysrgb&w=400',
+  },
+  {
+    id: '10',
+    title: 'Consulting Session',
+    description: 'Business strategy and growth consulting',
+    price: '90',
+    author: 'Business Consultant',
+    coverUrl: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
 ];
 
@@ -62,6 +115,7 @@ const recentPeople = [
     avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150',
     rating: 4.9,
     completedOrders: 127,
+    trustLevel: 5,
     categories: ['Development', 'Design'],
   },
   {
@@ -70,7 +124,7 @@ const recentPeople = [
     username: 'maria_dev',
     bio: 'Full-stack developer specializing in React and Node.js',
     avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150',
-    rating: 4.8,
+    trustLevel: 4,
     completedOrders: 89,
     categories: ['Development', 'Web'],
   },
@@ -80,7 +134,7 @@ const recentPeople = [
     username: 'ivan_writer',
     bio: 'Content writer and copywriter for digital marketing',
     avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150',
-    rating: 4.7,
+    trustLevel: 3,
     completedOrders: 156,
     categories: ['Writing', 'Marketing'],
   },
@@ -90,7 +144,7 @@ const recentPeople = [
     username: 'kate_photo',
     bio: 'Professional photographer for events and portraits',
     avatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150',
-    rating: 4.9,
+    trustLevel: 5,
     completedOrders: 203,
     categories: ['Photography', 'Events'],
   },
@@ -100,7 +154,7 @@ const recentPeople = [
     username: 'dmitry_video',
     bio: 'Video editor and motion graphics specialist',
     avatar: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=150',
-    rating: 4.6,
+    trustLevel: 4,
     completedOrders: 74,
     categories: ['Video', 'Animation'],
   },
@@ -180,12 +234,7 @@ export default function MainFeedTab() {
     <View key={item.id} style={styles.offerCard} data-id={`offer-${item.id}`}>
       <Image source={{ uri: item.coverUrl }} style={styles.offerImage} />
       <View style={styles.offerContent}>
-        <View style={styles.offerHeader}>
-          <Text style={styles.offerTitle}>{item.title}</Text>
-          <View style={styles.discountBadge}>
-            <Text style={styles.discountText}>-{item.discount}</Text>
-          </View>
-        </View>
+        <Text style={styles.offerTitle}>{item.title}</Text>
         <Text style={styles.offerDescription}>{item.description}</Text>
         <View style={styles.offerFooter}>
           <Text style={styles.offerAuthor}>by {item.author}</Text>
@@ -193,10 +242,9 @@ export default function MainFeedTab() {
         </View>
         <TouchableOpacity 
           style={styles.offerPayButton}
-          onPress={() => handleOfferPay(item)}
+          onPress={() => {}}
         >
-          <CreditCard size={16} color="#ffffff" strokeWidth={2} />
-          <Text style={styles.offerPayButtonText}>Pay</Text>
+          <Text style={styles.offerPayButtonText}>Подробнее</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -213,9 +261,12 @@ export default function MainFeedTab() {
       <View style={styles.personInfo}>
         <View style={styles.personHeader}>
           <Text style={styles.personName}>{item.name}</Text>
-          <View style={styles.ratingContainer}>
-            <Star size={14} color="#F59E0B" strokeWidth={2} fill="#F59E0B" />
-            <Text style={styles.ratingText}>{item.rating}</Text>
+          <View style={styles.trustContainer}>
+            {Array.from({ length: 5 }, (_, index) => (
+              <Text key={index} style={[styles.heart, index < item.trustLevel ? styles.heartFilled : styles.heartEmpty]}>
+                ♥
+              </Text>
+            ))}
           </View>
         </View>
         <Text style={styles.personUsername}>@{item.username}</Text>
@@ -253,8 +304,8 @@ export default function MainFeedTab() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Discover</Text>
-          <Text style={styles.subtitle}>Find the best creators and services</Text>
+          <Text style={styles.title}>BE INSIDE WEB-3</Text>
+          <Text style={styles.subtitle}>Откройте для себя лучших создателей и сервисы</Text>
         </View>
 
         {/* Search Bar */}
@@ -271,23 +322,18 @@ export default function MainFeedTab() {
         </View>
 
         {/* Featured Offers */}
-        <View style={styles.section} data-id="home-deals">
-          <Text style={styles.sectionTitle}>Featured Offers</Text>
+        <View style={styles.offersSection} data-id="home-deals">
+          <Text style={styles.offersSectionTitle}>Лучшие предложения</Text>
           {isLoadingOffers ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offersContainer}>
+            <View style={styles.offersGrid}>
               <OfferCardSkeleton />
               <OfferCardSkeleton />
               <OfferCardSkeleton />
-            </ScrollView>
+            </View>
           ) : featuredOffers.length > 0 ? (
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false} 
-              contentContainerStyle={styles.offersContainer}
-              bounces={false}
-            >
+            <View style={styles.offersGrid}>
               {featuredOffers.map((item) => renderOfferItem({ item }))}
-            </ScrollView>
+            </View>
           ) : (
             <View style={styles.emptyOffersContainer}>
               <EmptyState type="deals" />
@@ -506,9 +552,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#3B82F6',
   },
-  offersContainer: {
-    paddingLeft: 16,
-    paddingRight: 8,
+  offersSection: {
+    marginBottom: 32,
+    paddingHorizontal: 16,
+  },
+  offersSectionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1f2937',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  offersGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 16,
   },
   emptyOffersContainer: {
     backgroundColor: '#ffffff',
@@ -523,8 +582,8 @@ const styles = StyleSheet.create({
   offerCard: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    marginRight: 16,
-    width: 280,
+    width: '48%',
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -534,34 +593,16 @@ const styles = StyleSheet.create({
   },
   offerImage: {
     width: '100%',
-    height: 120,
+    height: 140,
   },
   offerContent: {
     padding: 16,
-  },
-  offerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
   },
   offerTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#1f2937',
-    flex: 1,
-    marginRight: 8,
-  },
-  discountBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  discountText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#D97706',
+    marginBottom: 8,
   },
   offerDescription: {
     fontSize: 14,
@@ -586,9 +627,8 @@ const styles = StyleSheet.create({
   },
   offerPayButton: {
     backgroundColor: '#3B82F6',
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     paddingVertical: 8,
     borderRadius: 12,
     minHeight: 36,
@@ -597,7 +637,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#ffffff',
-    marginLeft: 6,
   },
   personCard: {
     backgroundColor: '#ffffff',
@@ -634,15 +673,19 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     flex: 1,
   },
-  ratingContainer: {
+  trustContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  ratingText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#F59E0B',
-    marginLeft: 4,
+  heart: {
+    fontSize: 12,
+    marginLeft: 2,
+  },
+  heartFilled: {
+    color: '#EF4444',
+  },
+  heartEmpty: {
+    color: '#E5E7EB',
   },
   personUsername: {
     fontSize: 14,

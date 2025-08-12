@@ -264,13 +264,13 @@ export default function BalanceTab() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>My Balance</Text>
-          <Text style={styles.subtitle}>Track your earnings and payouts</Text>
+          <Text style={styles.title}>МОЙ БАЛАНС</Text>
+          <Text style={styles.subtitle}>Отслеживайте свои доходы и выплаты</Text>
         </View>
 
         {/* Total Balance */}
         <View style={styles.totalBalanceCard}>
-          <Text style={styles.totalBalanceLabel}>Your Balance</Text>
+          <Text style={styles.totalBalanceLabel}>Ваш баланс</Text>
           <Text style={styles.totalBalanceAmount}>{kpis.totalBalance} FBC</Text>
           <Text style={styles.totalBalanceNote}>1 TON = 1 FBC</Text>
         </View>
@@ -278,11 +278,11 @@ export default function BalanceTab() {
         {/* Balance Summary */}
         <View style={styles.balanceGrid}>
           <View style={styles.balanceCard} data-id="kpi-creator">
-            <Text style={styles.balanceLabel}>Creator Balance</Text>
+            <Text style={styles.balanceLabel}>Баланс создателя</Text>
             <Text style={styles.balanceAmount}>{kpis.creatorBalance} FBC</Text>
           </View>
           <View style={styles.balanceCard} data-id="kpi-referral">
-            <Text style={styles.balanceLabel}>Referral Balance</Text>
+            <Text style={styles.balanceLabel}>Реферальный баланс</Text>
             <Text style={styles.balanceAmount}>{kpis.referralBalance} FBC</Text>
           </View>
         </View>
@@ -295,13 +295,13 @@ export default function BalanceTab() {
           <View style={styles.pendingLeft}>
             <Clock size={20} color="#F59E0B" strokeWidth={2} />
             <View style={styles.pendingInfo}>
-              <Text style={styles.pendingLabel}>Pending</Text>
+              <Text style={styles.pendingLabel}>В ожидании</Text>
               <Text style={styles.pendingAmount}>{kpis.pendingAmount} FBC</Text>
             </View>
           </View>
           <View style={styles.pendingRight}>
             <View style={styles.pendingBadge}>
-              <Text style={styles.pendingBadgeText}>awaiting confirmation</Text>
+              <Text style={styles.pendingBadgeText}>ожидает подтверждения</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -309,13 +309,13 @@ export default function BalanceTab() {
         {/* Top Up Button */}
         <TouchableOpacity style={styles.topUpButton} data-id="btn-topup">
           <Wallet size={20} color="#10B981" strokeWidth={2} />
-          <Text style={styles.topUpButtonText}>Top Up Balance</Text>
+          <Text style={styles.topUpButtonText}>Пополнить баланс</Text>
         </TouchableOpacity>
 
         {/* Withdraw Button */}
         <TouchableOpacity style={styles.withdrawButton} data-id="btn-withdraw">
           <Wallet size={20} color="#ffffff" strokeWidth={2} />
-          <Text style={styles.withdrawButtonText}>Withdraw</Text>
+          <Text style={styles.withdrawButtonText}>Вывести</Text>
         </TouchableOpacity>
 
         {/* Tabs */}
@@ -424,18 +424,22 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 32,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: '#1f2937',
     marginBottom: 4,
+    textAlign: 'center',
+    letterSpacing: 1,
   },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
     lineHeight: 24,
+    textAlign: 'center',
   },
   totalBalanceCard: {
     backgroundColor: '#ffffff',
@@ -470,6 +474,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
     marginBottom: 16,
+    justifyContent: 'center',
   },
   balanceCard: {
     flex: 1,
@@ -498,6 +503,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 20,
     marginBottom: 24,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -507,12 +513,12 @@ const styles = StyleSheet.create({
   pendingLeft: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    flex: 1,
     marginBottom: 12,
+    justifyContent: 'center',
   },
   pendingInfo: {
     marginLeft: 12,
-    flex: 1,
+    alignItems: 'center',
   },
   pendingLabel: {
     fontSize: 14,
@@ -527,6 +533,7 @@ const styles = StyleSheet.create({
   },
   pendingRight: {
     alignItems: 'flex-end',
+    alignItems: 'center',
   },
   pendingBadge: {
     backgroundColor: '#FEF3C7',

@@ -35,8 +35,8 @@ export default function PageSetupTab() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>My Page & Links</Text>
-          <Text style={styles.subtitle}>Manage your profile and products</Text>
+          <Text style={styles.title}>МОЯ СТРАНИЦА И ССЫЛКИ</Text>
+          <Text style={styles.subtitle}>Управляйте своим профилем и продуктами</Text>
         </View>
 
         {/* Main Actions */}
@@ -79,7 +79,7 @@ export default function PageSetupTab() {
 
         {/* Payment History Section */}
         <View style={styles.paymentHistorySection}>
-          <Text style={styles.sectionTitle}>Payment Receipt + Referral Payout</Text>
+          <Text style={styles.sectionTitle}>Чеки платежей + Реферальные выплаты</Text>
           
           {isLoadingHistory ? (
             <View style={styles.historyList} data-id="list-links">
@@ -145,16 +145,20 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: 4,
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
+    textAlign: 'center',
   },
   mainActionsSection: {
     marginBottom: 24,
