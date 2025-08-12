@@ -150,7 +150,9 @@ export default function MyPageScreen() {
               <Text style={styles.pageName}>{pageSettings.publicName}</Text>
               <Text style={styles.pageUsername}>@{pageSettings.slug}</Text>
               <View style={styles.trustContainer}>
-            <Text style={styles.trustLevel}>Trust Level: 4</Text>
+                <Text style={styles.trustLevel}>Trust Level: 4</Text>
+              </View>
+            </View>
           </View>
           <Text style={styles.pageBio}>{pageSettings.bio}</Text>
         </View>
@@ -539,7 +541,28 @@ const styles = StyleSheet.create({
   trustLevel: {
     fontSize: 14,
     color: '#6b7280',
+    marginRight: 8,
     fontWeight: '500',
+  },
+  trustLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginRight: 8,
+    fontWeight: '500',
+  },
+  heartsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  heart: {
+    fontSize: 16,
+    marginRight: 2,
+  },
+  heartFilled: {
+    color: '#EF4444',
+  },
+  heartEmpty: {
+    color: '#E5E7EB',
   },
   pageBio: {
     fontSize: 16,
