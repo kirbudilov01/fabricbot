@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, Star, Users, ChevronRight, CreditCard, X, CircleCheck as CheckCircle, StickyNote } from 'lucide-react-native';
+import { ChevronUp } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAppData } from '@/src/shared/lib/store';
@@ -284,7 +285,7 @@ export default function MainFeedTab() {
               contentContainerStyle={styles.offersContainer}
               bounces={false}
             >
-              {featuredOffers.map((item) => renderOfferItem({ item }))}
+              {featuredOffers.map((item) => renderOfferItem({ item, key: item.id }))}
             </ScrollView>
           ) : (
             <View style={styles.emptyOffersContainer}>
@@ -309,7 +310,7 @@ export default function MainFeedTab() {
             </View>
           ) : recentPeople.length > 0 ? (
             <View>
-              {recentPeople.map((item) => renderPersonItem({ item }))}
+              {recentPeople.map((item) => renderPersonItem({ item, key: item.id }))}
             </View>
           ) : (
             <EmptyState type="creators" />
