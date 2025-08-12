@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, ChevronDown, ChevronUp, Copy, CreditCard, X, CircleCheck as CheckCircle, Users, ChevronRight, StickyNote } from 'lucide-react-native';
+import { ArrowLeft, ChevronDown, ChevronUp, Copy, CreditCard, X, CircleCheck as CheckCircle, Users, ChevronRight, StickyNote, MessageCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppData } from '@/src/shared/lib/store';
 import * as api from '@/src/shared/api/methods';
@@ -94,6 +94,23 @@ export default function MyPageScreen() {
     // In real app, copy to clipboard
     console.log('Copied link:', link);
     alert(`Link copied: ${link}`);
+  };
+
+  const handleContact = (product: any) => {
+    // Create contact link with product context and referral tracking
+    const refParam = referralUser ? `&ref=${referralUser.replace('@', '')}` : '';
+    const contactLink = `https://t.me/kirbudilov?text=Hi! I'm interested in "${product.title}"${refParam ? ` (referred by ${referralUser})` : ''}`;
+    
+    // Open Telegram chat
+    if (Platform.OS === 'web') {
+      window.open(contactLink, '_blank');
+    } else {
+      // For mobile, use Linking API
+      // Linking.openURL(contactLink);
+    }
+    
+    // Close modal
+    setSelectedProduct(null);
   };
 
   const visibleCategories = categories.filter(c => c.visible);
@@ -247,6 +264,15 @@ export default function MyPageScreen() {
                     >
                       <CreditCard size={20} color="#ffffff" strokeWidth={2} />
                       <Text style={styles.detailsPayButtonText}>Pay</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.detailsContactButton}
+                      onPress={() => handleContact(selectedProduct)}
+                      data-id="btn-contact"
+                    >
+                      <MessageCircle size={20} color="#10B981" strokeWidth={2} />
+                      <Text style={styles.detailsContactButtonText}>Contact</Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity
@@ -701,6 +727,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#ffffff',
+    marginLeft: 8,
+  },
+  detailsContactButton: {
+    backgroundColor: '#ffffff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#10B981',
+    minHeight: 56,
+  },
+  detailsContactButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#10B981',
     marginLeft: 8,
   },
   detailsRefButton: {
