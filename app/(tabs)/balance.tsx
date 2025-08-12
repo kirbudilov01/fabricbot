@@ -264,13 +264,13 @@ export default function BalanceTab() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>МОЙ БАЛАНС</Text>
-          <Text style={styles.subtitle}>Отслеживайте свои доходы и выплаты</Text>
+          <Text style={styles.title}>MY BALANCE</Text>
+          <Text style={styles.subtitle}>Track your earnings and payouts</Text>
         </View>
 
         {/* Total Balance */}
         <View style={styles.totalBalanceCard}>
-          <Text style={styles.totalBalanceLabel}>Ваш баланс</Text>
+          <Text style={styles.totalBalanceLabel}>Your balance</Text>
           <Text style={styles.totalBalanceAmount}>{kpis.totalBalance} FBC</Text>
           <Text style={styles.totalBalanceNote}>1 TON = 1 FBC</Text>
         </View>
@@ -278,11 +278,11 @@ export default function BalanceTab() {
         {/* Balance Summary */}
         <View style={styles.balanceGrid}>
           <View style={styles.balanceCard} data-id="kpi-creator">
-            <Text style={styles.balanceLabel}>Баланс создателя</Text>
+            <Text style={styles.balanceLabel}>Creator balance</Text>
             <Text style={styles.balanceAmount}>{kpis.creatorBalance} FBC</Text>
           </View>
           <View style={styles.balanceCard} data-id="kpi-referral">
-            <Text style={styles.balanceLabel}>Реферальный баланс</Text>
+            <Text style={styles.balanceLabel}>Referral balance</Text>
             <Text style={styles.balanceAmount}>{kpis.referralBalance} FBC</Text>
           </View>
         </View>
@@ -291,17 +291,17 @@ export default function BalanceTab() {
           style={styles.pendingCard}
           onPress={() => router.push('/pending-deals')}
           data-id="balance-pending-card"
-        >
+          <Text style={styles.offerPayButtonText}>Details</Text>
           <View style={styles.pendingLeft}>
             <Clock size={20} color="#F59E0B" strokeWidth={2} />
             <View style={styles.pendingInfo}>
-              <Text style={styles.pendingLabel}>В ожидании</Text>
+              <Text style={styles.pendingLabel}>Pending</Text>
               <Text style={styles.pendingAmount}>{kpis.pendingAmount} FBC</Text>
             </View>
           </View>
           <View style={styles.pendingRight}>
             <View style={styles.pendingBadge}>
-              <Text style={styles.pendingBadgeText}>ожидает подтверждения</Text>
+              <Text style={styles.pendingBadgeText}>awaiting confirmation</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -309,13 +309,13 @@ export default function BalanceTab() {
         {/* Top Up Button */}
         <TouchableOpacity style={styles.topUpButton} data-id="btn-topup">
           <Wallet size={20} color="#10B981" strokeWidth={2} />
-          <Text style={styles.topUpButtonText}>Пополнить баланс</Text>
+          <Text style={styles.topUpButtonText}>Top up balance</Text>
         </TouchableOpacity>
 
         {/* Withdraw Button */}
         <TouchableOpacity style={styles.withdrawButton} data-id="btn-withdraw">
           <Wallet size={20} color="#ffffff" strokeWidth={2} />
-          <Text style={styles.withdrawButtonText}>Вывести</Text>
+          <Text style={styles.withdrawButtonText}>Withdraw</Text>
         </TouchableOpacity>
 
         {/* Tabs */}
