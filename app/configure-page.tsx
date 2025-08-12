@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Plus, CreditCard as Edit, Trash2, X, ChevronDown, ChevronRight, Save, Eye, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, Plus, Edit, Trash2, X, ChevronDown, ChevronRight, Save, Eye, EyeOff } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAppData } from '@/src/shared/lib/store';
 import * as api from '@/src/shared/api/methods';
@@ -35,23 +35,19 @@ export default function ConfigurePageScreen() {
   const { categories, pageSettings } = data;
 
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
-  const [expandedSubcategories, setExpandedSubcategories] = useState<string[]>([]);
   
   // Modals
   const [pageSettingsModal, setPageSettingsModal] = useState(false);
   const [categoryModal, setCategoryModal] = useState(false);
-  const [subcategoryModal, setSubcategoryModal] = useState(false);
   const [productModal, setProductModal] = useState(false);
   
   // Edit states
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [editingSubcategory, setEditingSubcategory] = useState<{ subcategory: Subcategory; categoryId: string } | null>(null);
   const [editingProduct, setEditingProduct] = useState<{ product: Product; categoryId: string; subcategoryId: string } | null>(null);
   
   // Form data
   const [tempPageSettings, setTempPageSettings] = useState<PageSettings>(pageSettings);
   const [categoryForm, setCategoryForm] = useState({ name: '', visible: true });
-  const [subcategoryForm, setSubcategoryForm] = useState({ name: '', categoryId: '' });
   const [productForm, setProductForm] = useState({
     title: '',
     price: '',
@@ -69,19 +65,16 @@ export default function ConfigurePageScreen() {
     );
   };
 
-  const toggleSubcategory = (subcategoryId: string) => {
-    setExpandedSubcategories(prev => 
-      prev.includes(subcategoryId) 
-        ? prev.filter(id => id !== subcategoryId)
-        : [...prev, subcategoryId]
-    );
-  };
-
   const toggleCategoryVisibility = (categoryId: string) => {
     const category = categories.find(cat => cat.id === categoryId);
     if (category) {
       updateCategory(categoryId, { visible: !category.visible });
     }
+  };
+
+  // Get product count for a category
+  const getCategoryProductCount = (category: Category) => {
+    return category.subcategories.reduce((total, sub) => total + sub.products.length, 0);
   };
 
   const handleSavePageSettings = () => {
@@ -161,30 +154,6 @@ export default function ConfigurePageScreen() {
     );
   };
 
-  const handleAddSubcategory = (categoryId: string) => {
-    setSubcategoryForm({ name: '', categoryId });
-    setEditingSubcategory(null);
-    setSubcategoryModal(true);
-  };
-
-  const handleSaveSubcategory = () => {
-    if (!subcategoryForm.name.trim()) return;
-
-    if (editingSubcategory) {
-      updateSubcategory(
-        editingSubcategory.categoryId,
-        editingSubcategory.subcategory.id,
-        { name: subcategoryForm.name }
-      );
-    } else {
-      addSubcategory(subcategoryForm.categoryId, {
-        name: subcategoryForm.name,
-        products: []
-      });
-    }
-    setSubcategoryModal(false);
-  };
-
   const handleAddProduct = (categoryId: string, subcategoryId: string) => {
     setProductForm({
       title: '',
@@ -239,6 +208,37 @@ export default function ConfigurePageScreen() {
     }
   };
 
+  const handleDeleteProduct = (categoryId: string, subcategoryId: string, productId: string) => {
+    Alert.alert(
+      'Delete Product',
+      'Are you sure you want to delete this product?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: () => {
+            api.deleteProduct(productId)
+              .then(() => {
+                // Update local store by removing the product
+                updateCategory(categoryId, {
+                  ...categories.find(cat => cat.id === categoryId)!,
+                  subcategories: categories.find(cat => cat.id === categoryId)!.subcategories.map(sub =>
+                    sub.id === subcategoryId
+                      ? { ...sub, products: sub.products.filter(p => p.id !== productId) }
+                      : sub
+                  )
+                });
+              })
+              .catch(() => {
+                // Toast will be shown by API client error handling
+              });
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView 
@@ -269,6 +269,7 @@ export default function ConfigurePageScreen() {
             <Text style={styles.profileName}>{pageSettings.publicName}</Text>
             <Text style={styles.profileUsername}>@{pageSettings.slug}</Text>
             <Text style={styles.profileBio}>{pageSettings.bio}</Text>
+            <Text style={styles.profileBio}>{pageSettings.bio}</Text>
           </View>
           <TouchableOpacity
             style={styles.editProfileButton}
@@ -291,9 +292,10 @@ export default function ConfigurePageScreen() {
             </TouchableOpacity>
           </View>
 
-          <View data-id="cfg-list-categories">
+          <View>
             {categories.map((category) => {
               const isCategoryExpanded = expandedCategories.includes(category.id);
+              const productCount = getCategoryProductCount(category);
 
               return (
                 <View key={category.id} style={styles.categoryCard}>
@@ -302,7 +304,10 @@ export default function ConfigurePageScreen() {
                       style={styles.categoryTitleContainer}
                       onPress={() => toggleCategory(category.id)}
                     >
-                      <Text style={styles.categoryTitle}>{category.name}</Text>
+                      <View style={styles.categoryTitleRow}>
+                        <Text style={styles.categoryTitle}>{category.name}</Text>
+                        <Text style={styles.productCount}>{productCount} products</Text>
+                      </View>
                       {isCategoryExpanded ? (
                         <ChevronDown size={20} color="#6b7280" strokeWidth={2} />
                       ) : (
@@ -343,83 +348,72 @@ export default function ConfigurePageScreen() {
                       <TouchableOpacity
                         style={styles.addSubcategoryButton}
                         onPress={() => handleAddSubcategory(category.id)}
-                      >
-                        <Plus size={16} color="#6B7280" strokeWidth={2} />
-                        <Text style={styles.addSubcategoryText}>Add Subcategory</Text>
-                      </TouchableOpacity>
+                    <View style={styles.productsContainer}>
+                      <View style={styles.productsHeader}>
+                        <Text style={styles.productsTitle}>Products</Text>
+                        <TouchableOpacity
+                          style={styles.addProductButton}
+                          onPress={() => {
+                            // Use first subcategory or create one if none exists
+                            const subcategoryId = category.subcategories[0]?.id || 'default';
+                            handleAddProduct(category.id, subcategoryId);
+                          }}
+                          data-id="cfg-btn-add-product"
+                        >
+                          <Plus size={16} color="#3B82F6" strokeWidth={2} />
+                          <Text style={styles.addProductText}>Add Product</Text>
+                        </TouchableOpacity>
+                      </View>
 
-                      {category.subcategories.map((subcategory) => {
-                        const isSubcategoryExpanded = expandedSubcategories.includes(subcategory.id);
-
-                        return (
-                          <View key={subcategory.id} style={styles.subcategoryCard}>
-                            <TouchableOpacity
-                              style={styles.subcategoryHeader}
-                              onPress={() => toggleSubcategory(subcategory.id)}
-                            >
-                              <Text style={styles.subcategoryTitle}>{subcategory.name}</Text>
-                              {isSubcategoryExpanded ? (
-                                <ChevronDown size={18} color="#9CA3AF" strokeWidth={2} />
-                              ) : (
-                                <ChevronRight size={18} color="#9CA3AF" strokeWidth={2} />
-                              )}
-                            </TouchableOpacity>
-
-                            {isSubcategoryExpanded && (
-                              <View style={styles.productsContainer}>
-                                <TouchableOpacity
-                                  style={styles.addProductButton}
-                                  onPress={() => handleAddProduct(category.id, subcategory.id)}
-                                  data-id="cfg-btn-add-product"
-                                >
-                                  <Plus size={14} color="#9CA3AF" strokeWidth={2} />
-                                  <Text style={styles.addProductText}>Add Product</Text>
-                                </TouchableOpacity>
-
-                                <View data-id="cfg-list-products">
-                                  {subcategory.products.length > 0 ? (
-                                    subcategory.products.map((product) => (
-                                      <View key={product.id} style={styles.productCard}>
-                                        <View style={styles.productInfo}>
-                                          <Text style={styles.productTitle}>{product.title}</Text>
-                                          <Text style={styles.productPrice}>{product.price} FBC</Text>
-                                        </View>
-                                        <View style={styles.productActions}>
-                                          <TouchableOpacity
-                                            style={styles.editProductButton}
-                                            onPress={() => {
-                                              setProductForm({
-                                                title: product.title,
-                                                price: product.price,
-                                                description: product.description,
-                                                coverUrl: product.coverUrl || '',
-                                                categoryId: category.id,
-                                                subcategoryId: subcategory.id
-                                              });
-                                              setEditingProduct({ product, categoryId: category.id, subcategoryId: subcategory.id });
-                                              setProductModal(true);
-                                            }}
-                                          >
-                                            <Edit size={16} color="#6B7280" strokeWidth={2} />
-                                          </TouchableOpacity>
-                                        </View>
-                                      </View>
-                                    ))
-                                  ) : (
-                                    <View style={styles.emptyProducts}>
-                                      <EmptyState 
-                                        type="products" 
-                                        onAction={() => handleAddProduct(category.id, subcategory.id)}
-                                        actionText="Add product"
-                                      />
-                                    </View>
-                                  )}
-                                </View>
-                              </View>
-                            )}
+                      {/* Flatten all products from all subcategories */}
+                      {category.subcategories.flatMap(subcategory => 
+                        subcategory.products.map(product => (
+                          <View key={product.id} style={styles.productCard}>
+                            <View style={styles.productInfo}>
+                              <Text style={styles.productTitle}>{product.title}</Text>
+                              <Text style={styles.productPrice}>{product.price} FBC</Text>
+                            </View>
+                            <View style={styles.productActions}>
+                              <TouchableOpacity
+                                style={styles.editProductButton}
+                                onPress={() => {
+                                  setProductForm({
+                                    title: product.title,
+                                    price: product.price,
+                                    description: product.description,
+                                    coverUrl: product.coverUrl || '',
+                                    categoryId: category.id,
+                                    subcategoryId: subcategory.id
+                                  });
+                                  setEditingProduct({ product, categoryId: category.id, subcategoryId: subcategory.id });
+                                  setProductModal(true);
+                                }}
+                              >
+                                <Edit size={16} color="#6B7280" strokeWidth={2} />
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={styles.deleteProductButton}
+                                onPress={() => handleDeleteProduct(category.id, subcategory.id, product.id)}
+                              >
+                                <Trash2 size={16} color="#EF4444" strokeWidth={2} />
+                              </TouchableOpacity>
+                            </View>
                           </View>
-                        );
-                      })}
+                        ))
+                      )}
+
+                      {productCount === 0 && (
+                        <View style={styles.emptyProducts}>
+                          <EmptyState 
+                            type="products" 
+                            onAction={() => {
+                              const subcategoryId = category.subcategories[0]?.id || 'default';
+                              handleAddProduct(category.id, subcategoryId);
+                            }}
+                            actionText="Add your first product"
+                          />
+                        </View>
+                      )}
                     </View>
                   )}
                 </View>
@@ -479,7 +473,11 @@ export default function ConfigurePageScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleSavePageSettings}>
+            <TouchableOpacity 
+              style={styles.saveButton} 
+              onPress={handleSavePageSettings}
+              data-id="cfg-btn-save-page-settings"
+            >
               <Save size={20} color="#ffffff" strokeWidth={2} />
               <Text style={styles.saveButtonText}>Save Settings</Text>
             </TouchableOpacity>
@@ -517,47 +515,15 @@ export default function ConfigurePageScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleSaveCategory}>
+            <TouchableOpacity 
+              style={styles.saveButton} 
+              onPress={handleSaveCategory}
+              data-id="cfg-btn-save-category"
+            >
               <Save size={20} color="#ffffff" strokeWidth={2} />
               <Text style={styles.saveButtonText}>
                 {editingCategory ? 'Update Category' : 'Add Category'}
               </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Subcategory Modal */}
-      <Modal
-        visible={subcategoryModal}
-        animationType="slide"
-        transparent={true}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Subcategory</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setSubcategoryModal(false)}
-              >
-                <X size={24} color="#6b7280" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.formField}>
-              <Text style={styles.fieldLabel}>Subcategory Name</Text>
-              <TextInput
-                style={styles.textInput}
-                value={subcategoryForm.name}
-                onChangeText={(text) => setSubcategoryForm({ ...subcategoryForm, name: text })}
-                placeholder="Enter subcategory name"
-              />
-            </View>
-
-            <TouchableOpacity style={styles.saveButton} onPress={handleSaveSubcategory}>
-              <Save size={20} color="#ffffff" strokeWidth={2} />
-              <Text style={styles.saveButtonText}>Add Subcategory</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -568,7 +534,6 @@ export default function ConfigurePageScreen() {
         visible={productModal}
         animationType="slide"
         transparent={true}
-        data-id="cfg-modal-product"
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -592,7 +557,6 @@ export default function ConfigurePageScreen() {
                   value={productForm.title}
                   onChangeText={(text) => setProductForm({ ...productForm, title: text })}
                   placeholder="Enter product title"
-                  data-id="cfg-input-title"
                 />
               </View>
 
@@ -604,7 +568,6 @@ export default function ConfigurePageScreen() {
                   onChangeText={(text) => setProductForm({ ...productForm, price: text })}
                   placeholder="0.00"
                   keyboardType="numeric"
-                  data-id="cfg-input-price-fbc"
                 />
               </View>
 
@@ -617,7 +580,6 @@ export default function ConfigurePageScreen() {
                   placeholder="Product description"
                   multiline
                   numberOfLines={4}
-                  data-id="cfg-input-desc"
                 />
               </View>
 
@@ -628,11 +590,14 @@ export default function ConfigurePageScreen() {
                   value={productForm.coverUrl}
                   onChangeText={(text) => setProductForm({ ...productForm, coverUrl: text })}
                   placeholder="https://example.com/image.jpg"
-                  data-id="cfg-input-cover"
                 />
               </View>
 
-              <TouchableOpacity style={styles.saveButton} onPress={handleSaveProduct}>
+              <TouchableOpacity 
+                style={styles.saveButton} 
+                onPress={handleSaveProduct}
+                data-id="cfg-btn-save-product"
+              >
                 <Save size={20} color="#ffffff" strokeWidth={2} />
                 <Text style={styles.saveButtonText}>
                   {editingProduct ? 'Update Product' : 'Add Product'}
@@ -777,11 +742,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
+  categoryTitleRow: {
+    flex: 1,
+    marginRight: 8,
+  },
   categoryTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1f2937',
-    marginRight: 8,
+    marginBottom: 2,
+  },
+  productCount: {
+    fontSize: 12,
+    color: '#6b7280',
   },
   categoryActions: {
     flexDirection: 'row',
@@ -798,80 +771,59 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 8,
   },
-  subcategoriesContainer: {
+  productsContainer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
-  addSubcategoryButton: {
+  productsHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
     marginBottom: 12,
   },
-  addSubcategoryText: {
+  productsTitle: {
     fontSize: 14,
-    color: '#6B7280',
-    marginLeft: 4,
-  },
-  subcategoryCard: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  subcategoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-  },
-  subcategoryTitle: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#374151',
-  },
-  productsContainer: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
   },
   addProductButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#eff6ff',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 6,
-    marginBottom: 8,
+    borderRadius: 8,
   },
   addProductText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    fontWeight: '500',
+    color: '#3B82F6',
     marginLeft: 4,
   },
   productCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 6,
+    borderRadius: 8,
     padding: 12,
-    marginBottom: 6,
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   productInfo: {
     flex: 1,
   },
   productTitle: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#1f2937',
     marginBottom: 2,
   },
   productPrice: {
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '700',
     color: '#10B981',
-    fontWeight: '500',
   },
   productActions: {
     flexDirection: 'row',
@@ -879,11 +831,17 @@ const styles = StyleSheet.create({
   },
   editProductButton: {
     padding: 6,
+    marginRight: 4,
+  },
+  deleteProductButton: {
+    padding: 6,
   },
   emptyProducts: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   modalOverlay: {
     flex: 1,
