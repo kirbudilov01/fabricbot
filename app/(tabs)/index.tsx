@@ -112,7 +112,7 @@ const recentPeople = [
     name: 'KIRILL BUDILOV',
     username: 'kirbudilov',
     bio: 'Founder Trendvi and creator of AI solutions for bloggers',
-    avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150',
+    avatar: 'https://yt3.ggpht.com/k3Pn64o9Ge84P_xduTdgOwbtQR8JnOj2lbpL00BpURbRX38Wq4YU0dDbNnkVL6iiUciH2eg06w=s88-c-k-c0x00ffffff-no-rj',
     rating: 4.9,
     completedOrders: 127,
     trustLevel: '29 ♥',
