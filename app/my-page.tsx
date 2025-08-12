@@ -149,7 +149,7 @@ export default function MyPageScreen() {
               <Text style={styles.pageName}>{pageSettings.publicName}</Text>
               <Text style={styles.pageUsername}>@{pageSettings.slug}</Text>
               <View style={styles.trustContainer}>
-                <Text style={styles.trustLevel}>Trust Level: 4</Text>
+                <Text style={styles.trustLevel}>29 ♥</Text>
               </View>
             </View>
           </View>
