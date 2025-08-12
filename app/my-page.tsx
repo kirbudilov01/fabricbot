@@ -47,6 +47,8 @@ export default function MyPageScreen() {
         : [...prev, subcategoryId]
     );
   };
+    );
+  };
 
   const handlePay = (product: any) => {
     setSelectedProduct(product);
