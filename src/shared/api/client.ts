@@ -27,7 +27,7 @@ const getBaseUrl = (): string => {
   }
   
   // Default fallback
-  return 'https://api.fabricbot.com';
+  return 'https://fabricbot-backend1.vercel.app';
 };
 
 const BASE_URL = getBaseUrl();
