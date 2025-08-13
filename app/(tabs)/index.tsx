@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Star, Users, ChevronRight, CreditCard, X, CircleCheck as CheckCircle, StickyNote } from 'lucide-react-native';
+import { Search, Star, Users, ChevronRight, CreditCard, X, CircleCheck as CheckCircle, StickyNote, MessageCircle } from 'lucide-react-native';
 import { ChevronUp } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -20,6 +20,35 @@ import { useAppData } from '@/src/shared/lib/store';
 import * as api from '@/src/shared/api/methods';
 import { OfferCardSkeleton, PersonCardSkeleton } from '@/components/SkeletonLoader';
 import EmptyState from '@/components/EmptyState';
+
+// Telegram WebApp types
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: {
+        initData: string;
+        ready: () => void;
+        expand: () => void;
+      };
+    };
+  }
+}
+
+interface TelegramUser {
+  id: number;
+  tg_id: string;
+  username?: string;
+  display_name?: string;
+  referral_code: string;
+  created_at: string;
+}
+
+interface AuthResponse {
+  ok: boolean;
+  user?: TelegramUser;
+  last_joined?: TelegramUser[];
+  error?: string;
+}
 
 // Mock data for featured offers
 const featuredOffers = [
@@ -165,6 +194,14 @@ export default function MainFeedTab() {
   const tabBarHeight = useBottomTabBarHeight();
   const { data, addDeal } = useAppData();
   const { pageSettings } = data;
+  
+  // Telegram Auth State
+  const [user, setUser] = useState<TelegramUser | null>(null);
+  const [lastJoined, setLastJoined] = useState<TelegramUser[]>([]);
+  const [authError, setAuthError] = useState<string>('');
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  
+  // Existing state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [payModal, setPayModal] = useState(false);
@@ -175,6 +212,57 @@ export default function MainFeedTab() {
   const [isLoadingPeople, setIsLoadingPeople] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // Telegram Auth Function
+  const authenticateWithTelegram = async () => {
+    try {
+      setIsAuthLoading(true);
+      setAuthError('');
+
+      // Get initData from Telegram WebApp
+      const initData = window.Telegram?.WebApp?.initData || '';
+      
+      if (!initData) {
+        throw new Error('No Telegram initData found');
+      }
+
+      // Send POST request to backend
+      const response = await fetch('https://fabricbot-backend1.vercel.app/api/auth/telegram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ initData }),
+      });
+
+      const data: AuthResponse = await response.json();
+
+      if (data.ok && data.user) {
+        setUser(data.user);
+        setLastJoined(data.last_joined || []);
+      } else {
+        throw new Error(data.error || 'Authentication failed');
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      setAuthError(error instanceof Error ? error.message : 'Authentication failed');
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  // Initialize Telegram WebApp and authenticate
+  useEffect(() => {
+    // Initialize Telegram WebApp
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+    }
+
+    // Authenticate with backend
+    authenticateWithTelegram();
+  }, []);
 
   const handlePersonPress = (person: any) => {
     // Navigate to person's page with their data
@@ -244,7 +332,7 @@ export default function MainFeedTab() {
           style={styles.offerPayButton}
           onPress={() => {}}
         >
-          <Text style={styles.offerPayButtonText}>Подробнее</Text>
+          <Text style={styles.offerPayButtonText}>Details</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -282,6 +370,45 @@ export default function MainFeedTab() {
     </TouchableOpacity>
   );
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getUserDisplayName = (user: TelegramUser) => {
+    return user.display_name || user.username || user.tg_id;
+  };
+
+  // Show loading state
+  if (isAuthLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Authenticating with Telegram...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state
+  if (authError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{authError}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={authenticateWithTelegram}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} data-id="tab-home">
       <ScrollView 
@@ -296,6 +423,37 @@ export default function MainFeedTab() {
         keyboardShouldPersistTaps="handled"
         onScroll={handleScroll}
       >
+        {/* Telegram Auth Info */}
+        {user && (
+          <View style={styles.authSection}>
+            <Text style={styles.authTitle}>Welcome to FabricBot!</Text>
+            <View style={styles.userInfo}>
+              <Text style={styles.userInfoLabel}>Logged in as:</Text>
+              <Text style={styles.userInfoValue}>{getUserDisplayName(user)}</Text>
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userInfoLabel}>Your referral code:</Text>
+              <Text style={styles.referralCode}>{user.referral_code}</Text>
+            </View>
+            
+            {lastJoined.length > 0 && (
+              <View style={styles.lastJoinedSection}>
+                <Text style={styles.lastJoinedTitle}>Last 7 users joined:</Text>
+                {lastJoined.map((joinedUser, index) => (
+                  <View key={joinedUser.id} style={styles.joinedUserItem}>
+                    <Text style={styles.joinedUserName}>
+                      {index + 1}. {getUserDisplayName(joinedUser)}
+                    </Text>
+                    <Text style={styles.joinedUserDate}>
+                      {formatDate(joinedUser.created_at)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>EARN WITH OTHERS</Text>
@@ -488,6 +646,115 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  retryButton: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  authSection: {
+    backgroundColor: '#ffffff',
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  authTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  userInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  userInfoLabel: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  userInfoValue: {
+    fontSize: 16,
+    color: '#1f2937',
+    fontWeight: '600',
+  },
+  referralCode: {
+    fontSize: 16,
+    color: '#3B82F6',
+    fontWeight: '700',
+    backgroundColor: '#EBF4FF',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  lastJoinedSection: {
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  lastJoinedTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  joinedUserItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  joinedUserName: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+    flex: 1,
+  },
+  joinedUserDate: {
+    fontSize: 12,
+    color: '#9ca3af',
   },
   header: {
     paddingHorizontal: 16,
@@ -880,67 +1147,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#ffffff',
-  },
-  refModal: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-  },
-  refContent: {
-    padding: 24,
-  },
-  formField: {
-    marginBottom: 24,
-  },
-  fieldLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  textInput: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    minHeight: 48,
-    color: '#1f2937',
-  },
-  copyLinkButton: {
-    backgroundColor: '#3B82F6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 18,
-    marginBottom: 24,
-    minHeight: 56,
-  },
-  copyLinkButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginLeft: 8,
-  },
-  linkPreview: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    padding: 16,
-  },
-  linkPreviewLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  linkPreviewText: {
-    fontSize: 14,
-    color: '#1f2937',
-    fontFamily: 'monospace',
   },
   scrollToTopButton: {
     position: 'absolute',
