@@ -418,31 +418,6 @@ export default function MainFeedTab() {
     return user.display_name || user.username || user.tg_id;
   };
 
-  // Show loading state
-  if (isAuthLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Authenticating with Telegram...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // Show error state
-  if (authError) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{authError}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={authenticateWithTelegram}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container} data-id="tab-home">
       <ScrollView 
@@ -457,37 +432,6 @@ export default function MainFeedTab() {
         keyboardShouldPersistTaps="handled"
         onScroll={handleScroll}
       >
-        {/* Telegram Auth Info */}
-        {user && (
-          <View style={styles.authSection}>
-            <Text style={styles.authTitle}>Welcome to FabricBot!</Text>
-            <View style={styles.userInfo}>
-              <Text style={styles.userInfoLabel}>Logged in as:</Text>
-              <Text style={styles.userInfoValue}>{getUserDisplayName(user)}</Text>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.userInfoLabel}>Your referral code:</Text>
-              <Text style={styles.referralCode}>{user.referral_code}</Text>
-            </View>
-            
-            {lastJoined.length > 0 && (
-              <View style={styles.lastJoinedSection}>
-                <Text style={styles.lastJoinedTitle}>Last 7 users joined:</Text>
-                {lastJoined.map((joinedUser, index) => (
-                  <View key={joinedUser.id} style={styles.joinedUserItem}>
-                    <Text style={styles.joinedUserName}>
-                      {index + 1}. {getUserDisplayName(joinedUser)}
-                    </Text>
-                    <Text style={styles.joinedUserDate}>
-                      {formatDate(joinedUser.created_at)}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>EARN WITH OTHERS</Text>
@@ -680,115 +624,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 24,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#EF4444',
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 24,
-  },
-  retryButton: {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  retryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  authSection: {
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginTop: 16,
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  authTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  userInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  userInfoLabel: {
-    fontSize: 16,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  userInfoValue: {
-    fontSize: 16,
-    color: '#1f2937',
-    fontWeight: '600',
-  },
-  referralCode: {
-    fontSize: 16,
-    color: '#3B82F6',
-    fontWeight: '700',
-    backgroundColor: '#EBF4FF',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  lastJoinedSection: {
-    marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-  lastJoinedTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 12,
-  },
-  joinedUserItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  joinedUserName: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '500',
-    flex: 1,
-  },
-  joinedUserDate: {
-    fontSize: 12,
-    color: '#9ca3af',
   },
   header: {
     paddingHorizontal: 16,
