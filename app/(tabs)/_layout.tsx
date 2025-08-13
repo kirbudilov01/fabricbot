@@ -1,103 +1,44 @@
-import { Tabs } from 'expo-router';
-import { Chrome as Home, Users, Wallet, Link2, Settings, Crown } from 'lucide-react-native';
-import { Platform } from 'react-native';
+// app/_layout.tsx
+"use client";
 
-export default function TabLayout() {
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Chrome as Home, Users, Wallet, Link2, Crown } from "lucide-react";
+import clsx from "clsx";
+
+const tabs = [
+  { href: "/", label: "Discover", icon: Home },
+  { href: "/clan", label: "Clan", icon: Users },
+  { href: "/balance", label: "Balance", icon: Wallet },
+  { href: "/links", label: "Setup", icon: Link2 },
+  { href: "/account", label: "Profile", icon: Crown },
+];
+
+export default function TabLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#ffffff',
-          borderTopWidth: 0,
-          paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          elevation: 12,
-          ...(Platform.OS === 'web' && {
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 50,
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            backdropFilter: 'blur(20px)',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            paddingBottom: 'env(safe-area-inset-bottom, 8px)',
-          }),
-        },
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarLabelStyle: {
-          fontSize: 11,
-          marginTop: 4,
-        },
-        tabBarActiveLabelStyle: {
-          fontWeight: '700',
-        },
-        tabBarInactiveLabelStyle: {
-          fontWeight: '500',
-        },
-        tabBarIconStyle: {
-          marginTop: 4,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Discover',
-          tabBarIcon: ({ size, color }) => (
-            <Home size={size} color={color} strokeWidth={2} />
-          ),
-          tabBarTestID: 'tab-home',
-        }}
-      />
-      <Tabs.Screen
-        name="clan"
-        options={{
-          title: 'Clan',
-          tabBarIcon: ({ size, color }) => (
-            <Users size={size} color={color} strokeWidth={2} />
-          ),
-          tabBarTestID: 'tab-clan',
-        }}
-      />
-      <Tabs.Screen
-        name="balance"
-        options={{
-          title: 'Balance',
-          tabBarIcon: ({ size, color }) => (
-            <Wallet size={size} color={color} strokeWidth={2} />
-          ),
-          tabBarTestID: 'tab-balance',
-        }}
-      />
-      <Tabs.Screen
-        name="links"
-        options={{
-          title: 'Setup',
-          tabBarIcon: ({ size, color }) => (
-            <Link2 size={size} color={color} strokeWidth={2} />
-          ),
-          tabBarTestID: 'tab-links',
-        }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ size, color }) => (
-            <Crown size={size} color={color} strokeWidth={2} />
-          ),
-          tabBarTestID: 'tab-account',
-        }}
-      />
-    </Tabs>
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-1">{children}</main>
+
+      <nav className="fixed bottom-0 left-0 right-0 flex justify-around bg-white border-t p-2">
+        {tabs.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={clsx(
+                "flex flex-col items-center text-sm",
+                active ? "text-blue-500 font-bold" : "text-gray-500"
+              )}
+            >
+              <Icon size={20} />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
