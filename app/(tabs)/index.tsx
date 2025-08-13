@@ -253,15 +253,49 @@ export default function MainFeedTab() {
 
   // Initialize Telegram WebApp and authenticate
   useEffect(() => {
-    // Initialize Telegram WebApp
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
-      tg.expand();
+    // Check if running in Telegram WebApp environment
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.Telegram?.WebApp) {
+        // Initialize Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        // Authenticate with backend
+        authenticateWithTelegram();
+      } else {
+        // Mock data for development in standard browser
+        setIsAuthLoading(false);
+        setUser({
+          id: 1,
+          tg_id: 'dev_user',
+          username: 'dev_user',
+          display_name: 'Development User',
+          referral_code: 'DEV123',
+          created_at: new Date().toISOString(),
+        });
+        setLastJoined([
+          {
+            id: 2,
+            tg_id: 'user1',
+            username: 'testuser1',
+            display_name: 'Test User 1',
+            referral_code: 'TEST1',
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+          },
+          {
+            id: 3,
+            tg_id: 'user2',
+            username: 'testuser2',
+            display_name: 'Test User 2',
+            referral_code: 'TEST2',
+            created_at: new Date(Date.now() - 172800000).toISOString(),
+          },
+        ]);
+      }
+    } else {
+      // For mobile platforms, authenticate normally
+      authenticateWithTelegram();
     }
-
-    // Authenticate with backend
-    authenticateWithTelegram();
   }, []);
 
   const handlePersonPress = (person: any) => {
