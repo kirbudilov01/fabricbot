@@ -925,6 +925,9 @@ video {
 .max-w-sm {
   max-width: 24rem;
 }
+.max-w-md {
+  max-width: 28rem;
+}
 .flex-1 {
   flex: 1 1 0%;
 }
@@ -1466,6 +1469,11 @@ video {
 .hover\:text-primary-600:hover {
   --tw-text-opacity: 1;
   color: rgb(37 99 235 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-gray-700:hover {
+  --tw-text-opacity: 1;
+  color: rgb(55 65 81 / var(--tw-text-opacity, 1));
 }
 
 .hover\:shadow-md:hover {
