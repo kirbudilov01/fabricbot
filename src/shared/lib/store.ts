@@ -1,70 +1,72 @@
-import { useState, useEffect } from 'react';
+'use client'
+
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react'
 
 export interface Product {
-  id: string;
-  title: string;
-  price: string;
-  description: string;
-  coverUrl?: string;
+  id: string
+  title: string
+  price: string
+  description: string
+  coverUrl?: string
 }
 
 export interface Subcategory {
-  id: string;
-  name: string;
-  products: Product[];
+  id: string
+  name: string
+  products: Product[]
 }
 
 export interface Category {
-  id: string;
-  name: string;
-  visible: boolean;
-  subcategories: Subcategory[];
+  id: string
+  name: string
+  visible: boolean
+  subcategories: Subcategory[]
 }
 
 export interface PageSettings {
-  publicName: string;
-  bio?: string;
-  slug?: string;
-  projectTonAddress?: string;
+  publicName: string
+  bio?: string
+  slug?: string
+  projectTonAddress?: string
 }
 
 export interface PaymentLink {
-  id: string;
-  username: string;
-  productId: string;
-  productTitle: string;
-  link: string;
-  createdAt: string;
+  id: string
+  username: string
+  productId: string
+  productTitle: string
+  link: string
+  createdAt: string
 }
 
 export interface Deal {
-  id: string;
-  productId?: string;
-  title?: string;
-  amountFBC: string;
-  refUsername?: string;
-  role: 'creator' | 'referral';
-  status: 'pending' | 'released' | 'cancelled';
-  date: string;
+  id: string
+  productId?: string
+  title?: string
+  amountFBC: string
+  refUsername?: string
+  role: 'creator' | 'referral'
+  status: 'pending' | 'released' | 'cancelled'
+  date: string
 }
 
 export interface LedgerEntry {
-  id: string;
-  kind: 'deposit' | 'release' | 'ref_bonus' | 'fee' | 'withdraw';
-  amountFBC: string;
-  date: string;
+  id: string
+  kind: 'deposit' | 'release' | 'ref_bonus' | 'fee' | 'withdraw'
+  amountFBC: string
+  date: string
 }
 
 export interface AppData {
-  categories: Category[];
-  products: Product[];
-  pageSettings: PageSettings;
-  links: PaymentLink[];
-  deals: Deal[];
-  ledger: LedgerEntry[];
+  categories: Category[]
+  products: Product[]
+  pageSettings: PageSettings
+  links: PaymentLink[]
+  deals: Deal[]
+  ledger: LedgerEntry[]
 }
 
-const STORAGE_KEY = 'fbc.owner.config';
+const STORAGE_KEY = 'fbc.owner.config'
 
 const defaultData: AppData = {
   categories: [
@@ -181,26 +183,47 @@ const defaultData: AppData = {
       date: '2025-01-15'
     }
   ]
-};
+}
 
-let toastCallback: ((message: string, type: 'success' | 'error' | 'warning') => void) | null = null;
+interface AppDataContextType {
+  data: AppData
+  updateData: (updater: (prev: AppData) => AppData) => void
+  addCategory: (category: Omit<Category, 'id'>) => void
+  updateCategory: (id: string, updates: Partial<Category>) => void
+  deleteCategory: (id: string) => void
+  addSubcategory: (categoryId: string, subcategory: Omit<Subcategory, 'id'>) => void
+  updateSubcategory: (categoryId: string, subcategoryId: string, updates: Partial<Subcategory>) => void
+  addProduct: (categoryId: string, subcategoryId: string, product: Omit<Product, 'id'>) => void
+  updateProduct: (categoryId: string, subcategoryId: string, productId: string, updates: Partial<Product>) => void
+  updatePageSettings: (updates: Partial<PageSettings>) => void
+  addLink: (link: Omit<PaymentLink, 'id'>) => void
+  deleteLink: (id: string) => void
+  addDeal: (deal: Omit<Deal, 'id'>) => void
+  updateDeal: (id: string, updates: Partial<Deal>) => void
+  addLedgerEntry: (entry: Omit<LedgerEntry, 'id'>) => void
+}
+
+const AppDataContext = createContext<AppDataContextType | undefined>(undefined)
+
+let toastCallback: ((message: string, type: 'success' | 'error' | 'warning') => void) | null = null
 
 export function setToastCallback(callback: (message: string, type: 'success' | 'error' | 'warning') => void) {
-  toastCallback = callback;
+  toastCallback = callback
 }
 
 function showToast(message: string, type: 'success' | 'error' | 'warning' = 'success') {
   if (toastCallback) {
-    toastCallback(message, type);
+    toastCallback(message, type)
   }
 }
 
 function loadData(): AppData {
+  if (typeof window === 'undefined') return defaultData
+  
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
-      const parsed = JSON.parse(stored);
-      // Merge with default data to ensure all fields exist
+      const parsed = JSON.parse(stored)
       return {
         ...defaultData,
         ...parsed,
@@ -208,41 +231,43 @@ function loadData(): AppData {
           ...defaultData.pageSettings,
           ...parsed.pageSettings
         }
-      };
+      }
     }
   } catch (error) {
-    console.error('Failed to load data from localStorage:', error);
+    console.error('Failed to load data from localStorage:', error)
   }
-  return defaultData;
+  return defaultData
 }
 
 function saveData(data: AppData) {
+  if (typeof window === 'undefined') return
+  
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    showToast('Saved');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    showToast('Saved')
   } catch (error) {
-    console.error('Failed to save data to localStorage:', error);
-    showToast('Failed to save', 'error');
+    console.error('Failed to save data to localStorage:', error)
+    showToast('Failed to save', 'error')
   }
 }
 
-export function useAppData() {
-  const [data, setData] = useState<AppData>(defaultData);
+export function AppDataProvider({ children }: { children: ReactNode }) {
+  const [data, setData] = useState<AppData>(defaultData)
 
   useEffect(() => {
-    const loadedData = loadData();
-    setData(loadedData);
-  }, []);
+    const loadedData = loadData()
+    setData(loadedData)
+  }, [])
 
   const updateData = (updater: (prev: AppData) => AppData) => {
     setData(prev => {
-      const newData = updater(prev);
-      saveData(newData);
-      return newData;
-    });
-  };
+      const newData = updater(prev)
+      saveData(newData)
+      return newData
+    })
+  }
 
-  return {
+  const contextValue: AppDataContextType = {
     data,
     updateData,
     // Categories
@@ -250,7 +275,7 @@ export function useAppData() {
       updateData(prev => ({
         ...prev,
         categories: [...prev.categories, { ...category, id: Date.now().toString() }]
-      }));
+      }))
     },
     updateCategory: (id: string, updates: Partial<Category>) => {
       updateData(prev => ({
@@ -258,13 +283,13 @@ export function useAppData() {
         categories: prev.categories.map(cat => 
           cat.id === id ? { ...cat, ...updates } : cat
         )
-      }));
+      }))
     },
     deleteCategory: (id: string) => {
       updateData(prev => ({
         ...prev,
         categories: prev.categories.filter(cat => cat.id !== id)
-      }));
+      }))
     },
     // Subcategories
     addSubcategory: (categoryId: string, subcategory: Omit<Subcategory, 'id'>) => {
@@ -275,7 +300,7 @@ export function useAppData() {
             ? { ...cat, subcategories: [...cat.subcategories, { ...subcategory, id: Date.now().toString() }] }
             : cat
         )
-      }));
+      }))
     },
     updateSubcategory: (categoryId: string, subcategoryId: string, updates: Partial<Subcategory>) => {
       updateData(prev => ({
@@ -290,7 +315,7 @@ export function useAppData() {
               }
             : cat
         )
-      }));
+      }))
     },
     // Products
     addProduct: (categoryId: string, subcategoryId: string, product: Omit<Product, 'id'>) => {
@@ -308,7 +333,7 @@ export function useAppData() {
               }
             : cat
         )
-      }));
+      }))
     },
     updateProduct: (categoryId: string, subcategoryId: string, productId: string, updates: Partial<Product>) => {
       updateData(prev => ({
@@ -330,34 +355,34 @@ export function useAppData() {
               }
             : cat
         )
-      }));
+      }))
     },
     // Page Settings
     updatePageSettings: (updates: Partial<PageSettings>) => {
       updateData(prev => ({
         ...prev,
         pageSettings: { ...prev.pageSettings, ...updates }
-      }));
+      }))
     },
     // Links
     addLink: (link: Omit<PaymentLink, 'id'>) => {
       updateData(prev => ({
         ...prev,
         links: [...prev.links, { ...link, id: Date.now().toString() }]
-      }));
+      }))
     },
     deleteLink: (id: string) => {
       updateData(prev => ({
         ...prev,
         links: prev.links.filter(link => link.id !== id)
-      }));
+      }))
     },
     // Deals
     addDeal: (deal: Omit<Deal, 'id'>) => {
       updateData(prev => ({
         ...prev,
         deals: [...prev.deals, { ...deal, id: Date.now().toString() }]
-      }));
+      }))
     },
     updateDeal: (id: string, updates: Partial<Deal>) => {
       updateData(prev => ({
@@ -365,14 +390,28 @@ export function useAppData() {
         deals: prev.deals.map(deal => 
           deal.id === id ? { ...deal, ...updates } : deal
         )
-      }));
+      }))
     },
     // Ledger
     addLedgerEntry: (entry: Omit<LedgerEntry, 'id'>) => {
       updateData(prev => ({
         ...prev,
         ledger: [...prev.ledger, { ...entry, id: Date.now().toString() }]
-      }));
+      }))
     }
-  };
+  }
+
+  return (
+    <AppDataContext.Provider value={contextValue}>
+      {children}
+    </AppDataContext.Provider>
+  )
+}
+
+export function useAppData() {
+  const context = useContext(AppDataContext)
+  if (context === undefined) {
+    throw new Error('useAppData must be used within an AppDataProvider')
+  }
+  return context
 }
