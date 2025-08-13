@@ -44,3 +44,4 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
       </nav>
     </div>
   );
+}
