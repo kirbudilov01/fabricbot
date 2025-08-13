@@ -1,54 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  FlatList,
-  Modal,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Star, Users, ChevronRight, CreditCard, X, CircleCheck as CheckCircle, StickyNote, MessageCircle } from 'lucide-react-native';
-import { ChevronUp } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useAppData } from '@/src/shared/lib/store';
-import * as api from '@/src/shared/api/methods';
-import { OfferCardSkeleton, PersonCardSkeleton } from '@/components/SkeletonLoader';
-import EmptyState from '@/components/EmptyState';
+'use client'
 
-// Telegram WebApp types
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        initData: string;
-        ready: () => void;
-        expand: () => void;
-      };
-    };
-  }
-}
-
-interface TelegramUser {
-  id: number;
-  tg_id: string;
-  username?: string;
-  display_name?: string;
-  referral_code: string;
-  created_at: string;
-}
-
-interface AuthResponse {
-  ok: boolean;
-  user?: TelegramUser;
-  last_joined?: TelegramUser[];
-  error?: string;
-}
+import { useState, useRef } from 'react'
+import Image from 'next/image'
+import { Search, Users, ChevronRight, CreditCard, X, CheckCircle, StickyNote, ChevronUp } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useAppData } from '@/lib/store'
+import * as api from '@/lib/api'
+import { OfferCardSkeleton, PersonCardSkeleton } from '@/components/SkeletonLoader'
+import EmptyState from '@/components/EmptyState'
 
 // Mock data for featured offers
 const featuredOffers = [
@@ -92,47 +51,7 @@ const featuredOffers = [
     author: 'App Designers',
     coverUrl: 'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg?auto=compress&cs=tinysrgb&w=400',
   },
-  {
-    id: '6',
-    title: 'SEO Optimization',
-    description: 'Complete SEO audit and optimization',
-    price: '120',
-    author: 'SEO Experts',
-    coverUrl: 'https://images.pexels.com/photos/270637/pexels-photo-270637.jpeg?auto=compress&cs=tinysrgb&w=400',
-  },
-  {
-    id: '7',
-    title: 'Content Writing',
-    description: 'Professional content for your website',
-    price: '80',
-    author: 'Content Writers',
-    coverUrl: 'https://images.pexels.com/photos/261662/pexels-photo-261662.jpeg?auto=compress&cs=tinysrgb&w=400',
-  },
-  {
-    id: '8',
-    title: 'Video Production',
-    description: 'Professional video editing and production',
-    price: '250',
-    author: 'Video Pro',
-    coverUrl: 'https://images.pexels.com/photos/3945313/pexels-photo-3945313.jpeg?auto=compress&cs=tinysrgb&w=400',
-  },
-  {
-    id: '9',
-    title: 'Photography Session',
-    description: 'Professional photo shoot for your business',
-    price: '180',
-    author: 'Photo Studio',
-    coverUrl: 'https://images.pexels.com/photos/1264210/pexels-photo-1264210.jpeg?auto=compress&cs=tinysrgb&w=400',
-  },
-  {
-    id: '10',
-    title: 'Consulting Session',
-    description: 'Business strategy and growth consulting',
-    price: '90',
-    author: 'Business Consultant',
-    coverUrl: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=400',
-  },
-];
+]
 
 // Mock data for recent people
 const recentPeople = [
@@ -167,159 +86,33 @@ const recentPeople = [
     completedOrders: 156,
     categories: ['Writing', 'Marketing'],
   },
-  {
-    id: '4',
-    name: 'Kate Photographer',
-    username: 'kate_photo',
-    bio: 'Professional photographer for events and portraits',
-    avatar: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150',
-    trustLevel: '7 ♥',
-    completedOrders: 203,
-    categories: ['Photography', 'Events'],
-  },
-  {
-    id: '5',
-    name: 'Dmitry Video',
-    username: 'dmitry_video',
-    bio: 'Video editor and motion graphics specialist',
-    avatar: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=150',
-    trustLevel: '4 ♥',
-    completedOrders: 74,
-    categories: ['Video', 'Animation'],
-  },
-];
+]
 
 export default function MainFeedTab() {
-  const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
-  const { data, addDeal } = useAppData();
-  const { pageSettings } = data;
+  const router = useRouter()
+  const { data, addDeal } = useAppData()
   
-  // Telegram Auth State
-  const [user, setUser] = useState<TelegramUser | null>(null);
-  const [lastJoined, setLastJoined] = useState<TelegramUser[]>([]);
-  const [authError, setAuthError] = useState<string>('');
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  
-  // Existing state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedOffer, setSelectedOffer] = useState<any>(null);
-  const [payModal, setPayModal] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [paymentNote, setPaymentNote] = useState('');
-  const [isLoadingOffers, setIsLoadingOffers] = useState(false);
-  const [isLoadingPeople, setIsLoadingPeople] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
-
-  // Telegram Auth Function
-  const authenticateWithTelegram = async () => {
-    try {
-      setIsAuthLoading(true);
-      setAuthError('');
-
-      // Get initData from Telegram WebApp
-      const initData = window.Telegram?.WebApp?.initData || '';
-      
-      if (!initData) {
-        throw new Error('No Telegram initData found');
-      }
-
-      // Send POST request to backend
-      const response = await fetch('https://fabricbot-backend1.vercel.app/api/auth/telegram', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ initData }),
-      });
-
-      const data: AuthResponse = await response.json();
-
-      if (data.ok && data.user) {
-        setUser(data.user);
-        setLastJoined(data.last_joined || []);
-      } else {
-        throw new Error(data.error || 'Authentication failed');
-      }
-    } catch (error) {
-      console.error('Auth error:', error);
-      setAuthError(error instanceof Error ? error.message : 'Authentication failed');
-    } finally {
-      setIsAuthLoading(false);
-    }
-  };
-
-  // Initialize Telegram WebApp and authenticate
-  useEffect(() => {
-    // Check if running in Telegram WebApp environment
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      if (window.Telegram?.WebApp) {
-        // Initialize Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        // Authenticate with backend
-        authenticateWithTelegram();
-      } else {
-        // Mock data for development in standard browser
-        setIsAuthLoading(false);
-        setUser({
-          id: 1,
-          tg_id: 'dev_user',
-          username: 'dev_user',
-          display_name: 'Development User',
-          referral_code: 'DEV123',
-          created_at: new Date().toISOString(),
-        });
-        setLastJoined([
-          {
-            id: 2,
-            tg_id: 'user1',
-            username: 'testuser1',
-            display_name: 'Test User 1',
-            referral_code: 'TEST1',
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-          },
-          {
-            id: 3,
-            tg_id: 'user2',
-            username: 'testuser2',
-            display_name: 'Test User 2',
-            referral_code: 'TEST2',
-            created_at: new Date(Date.now() - 172800000).toISOString(),
-          },
-        ]);
-      }
-    } else {
-      // For mobile platforms, authenticate normally
-      authenticateWithTelegram();
-    }
-  }, []);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedOffer, setSelectedOffer] = useState<any>(null)
+  const [payModal, setPayModal] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
+  const [agreeTerms, setAgreeTerms] = useState(false)
+  const [paymentNote, setPaymentNote] = useState('')
+  const [isLoadingOffers, setIsLoadingOffers] = useState(false)
+  const [isLoadingPeople, setIsLoadingPeople] = useState(false)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   const handlePersonPress = (person: any) => {
-    // Navigate to person's page with their data
-    router.push({
-      pathname: '/my-page',
-      params: {
-        userId: person.id,
-        username: person.username,
-        name: person.name,
-        bio: person.bio,
-        avatar: person.avatar,
-      },
-    });
-  };
+    router.push(`/my-page?userId=${person.id}&username=${person.username}`)
+  }
 
   const handleOfferPay = (offer: any) => {
-    setSelectedOffer(offer);
-    setPayModal(true);
-  };
+    setSelectedOffer(offer)
+    setPayModal(true)
+  }
 
   const handleProceedToPay = () => {
     if (agreeTerms && selectedOffer) {
-      // Create deal via API
       api.createDeal({
         productId: selectedOffer.id,
         title: selectedOffer.title,
@@ -329,709 +122,258 @@ export default function MainFeedTab() {
         date: new Date().toISOString().split('T')[0]
       })
         .then((newDeal) => {
-          // Update local store
-          addDeal(newDeal);
-          
-          setPayModal(false);
-          setPaymentSuccess(true);
-          setAgreeTerms(false);
-          setPaymentNote('');
+          addDeal(newDeal)
+          setPayModal(false)
+          setPaymentSuccess(true)
+          setAgreeTerms(false)
+          setPaymentNote('')
         })
         .catch(() => {
           // Toast will be shown by API client error handling
-        });
+        })
     }
-  };
-
-  const handleScroll = (event: any) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    setShowScrollTop(offsetY > 300);
-  };
+  }
 
   const scrollToTop = () => {
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-  };
-
-  const renderOfferItem = ({ item }: { item: any }) => (
-    <View key={item.id} style={styles.offerCard} data-id={`offer-${item.id}`}>
-      <Image source={{ uri: item.coverUrl }} style={styles.offerImage} />
-      <View style={styles.offerContent}>
-        <Text style={styles.offerTitle}>{item.title}</Text>
-        <Text style={styles.offerDescription}>{item.description}</Text>
-        <View style={styles.offerFooter}>
-          <Text style={styles.offerAuthor}>by {item.author}</Text>
-          <Text style={styles.offerPrice}>{item.price} FBC</Text>
-        </View>
-        <TouchableOpacity 
-          style={styles.offerPayButton}
-          onPress={() => {}}
-        >
-          <Text style={styles.offerPayButtonText}>Details</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  const renderPersonItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      key={item.id}
-      style={styles.personCard}
-      onPress={() => handlePersonPress(item)}
-      data-id={`person-${item.id}`}
-    >
-      <Image source={{ uri: item.avatar }} style={styles.personAvatar} />
-      <View style={styles.personInfo}>
-        <View style={styles.personHeader}>
-          <Text style={styles.personName}>{item.name}</Text>
-          <Text style={styles.trustNumber}>{item.trustLevel}</Text>
-        </View>
-        <Text style={styles.personUsername}>@{item.username}</Text>
-        <Text style={styles.personBio} numberOfLines={2}>
-          {item.bio}
-        </Text>
-        <View style={styles.personStats}>
-          <Text style={styles.statsText}>{item.completedOrders} orders</Text>
-          <View style={styles.categoriesContainer}>
-            {item.categories.slice(0, 2).map((category: string, index: number) => (
-              <View key={index} style={styles.categoryTag}>
-                <Text style={styles.categoryText}>{category}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      </View>
-      <ChevronRight size={20} color="#9CA3AF" strokeWidth={2} />
-    </TouchableOpacity>
-  );
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getUserDisplayName = (user: TelegramUser) => {
-    return user.display_name || user.username || user.tg_id;
-  };
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
-    <SafeAreaView style={styles.container} data-id="tab-home">
-      <ScrollView 
-        ref={scrollViewRef}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: tabBarHeight + 24 }
-        ]}
-        scrollEventThrottle={16}
-        bounces={false}
-        contentInsetAdjustmentBehavior="never"
-        keyboardShouldPersistTaps="handled"
-        onScroll={handleScroll}
-      >
+    <div className="min-h-screen bg-slate-50 pb-20" data-id="tab-home">
+      <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>EARN WITH OTHERS</Text>
-          <Text style={styles.subtitle}>Get referral links to other people's products and earn together</Text>
-        </View>
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">EARN WITH OTHERS</h1>
+          <p className="text-gray-600">Get referral links to other people's products and earn together</p>
+        </div>
 
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar} data-id="home-search">
-            <Search size={20} color="#9CA3AF" strokeWidth={2} />
-            <TextInput
-              style={styles.searchInput}
+        <div className="mb-8">
+          <div className="relative max-w-2xl mx-auto" data-id="home-search">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
               placeholder="Search services or creators..."
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
-          </View>
-        </View>
+          </div>
+        </div>
 
         {/* Featured Offers */}
-        <View style={styles.offersSection} data-id="home-deals">
-          <Text style={styles.offersSectionTitle}>Now is featured</Text>
+        <section className="mb-12" data-id="home-deals">
+          <h2 className="text-xl font-semibold text-gray-900 text-center mb-6">Now is featured</h2>
           {isLoadingOffers ? (
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.offersScrollContainer}
-            >
+            <div className="flex gap-6 overflow-x-auto pb-4">
               <OfferCardSkeleton />
               <OfferCardSkeleton />
               <OfferCardSkeleton />
-            </ScrollView>
+            </div>
           ) : featuredOffers.length > 0 ? (
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.offersScrollContainer}
-            >
-              {featuredOffers.map((item) => renderOfferItem({ item }))}
-            </ScrollView>
+            <div className="flex gap-6 overflow-x-auto pb-4">
+              {featuredOffers.map((offer) => (
+                <div key={offer.id} className="flex-shrink-0 w-80 card p-0 overflow-hidden" data-id={`offer-${offer.id}`}>
+                  <Image
+                    src={offer.coverUrl}
+                    alt={offer.title}
+                    width={320}
+                    height={120}
+                    className="w-full h-32 object-cover"
+                  />
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">{offer.title}</h3>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{offer.description}</p>
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs text-gray-500">by {offer.author}</span>
+                      <span className="font-bold text-success-500">{offer.price} FBC</span>
+                    </div>
+                    <button
+                      onClick={() => handleOfferPay(offer)}
+                      className="w-full btn-primary py-2 text-sm"
+                    >
+                      Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
-            <View style={styles.emptyOffersContainer}>
+            <div className="card p-8">
               <EmptyState type="deals" />
-            </View>
+            </div>
           )}
-        </View>
+        </section>
 
         {/* Recent People */}
-        <View style={styles.section} data-id="home-list-new">
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Creators</Text>
-            <TouchableOpacity style={styles.seeAllButton}>
-              <Text style={styles.seeAllText}>See all</Text>
-            </TouchableOpacity>
-          </View>
+        <section data-id="home-list-new">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">Recent Creators</h2>
+            <button className="text-primary-500 font-medium hover:text-primary-600">
+              See all
+            </button>
+          </div>
           {isLoadingPeople ? (
-            <View>
+            <div className="space-y-4">
               <PersonCardSkeleton />
               <PersonCardSkeleton />
-              <PersonCardSkeleton />
-            </View>
+            </div>
           ) : recentPeople.length > 0 ? (
-            <View>
-              {recentPeople.map((item) => renderPersonItem({ item }))}
-            </View>
+            <div className="space-y-4">
+              {recentPeople.map((person) => (
+                <div
+                  key={person.id}
+                  onClick={() => handlePersonPress(person)}
+                  className="card p-6 flex items-center cursor-pointer hover:shadow-md transition-shadow"
+                  data-id={`person-${person.id}`}
+                >
+                  <Image
+                    src={person.avatar}
+                    alt={person.name}
+                    width={56}
+                    height={56}
+                    className="w-14 h-14 rounded-full mr-4"
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-gray-900">{person.name}</h3>
+                      <span className="bg-primary-50 text-primary-600 px-2 py-1 rounded-lg text-sm font-medium">
+                        {person.trustLevel}
+                      </span>
+                    </div>
+                    <p className="text-primary-500 text-sm mb-2">@{person.username}</p>
+                    <p className="text-gray-600 text-sm mb-3">{person.bio}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">{person.completedOrders} orders</span>
+                      <div className="flex gap-2">
+                        {person.categories.slice(0, 2).map((category, index) => (
+                          <span
+                            key={index}
+                            className="bg-primary-50 text-primary-600 px-2 py-1 rounded text-xs"
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400 ml-4" />
+                </div>
+              ))}
+            </div>
           ) : (
-            <EmptyState type="creators" />
+            <div className="card p-8">
+              <EmptyState type="creators" />
+            </div>
           )}
-        </View>
-      </ScrollView>
+        </section>
+      </div>
 
-      {/* Scroll to Top Button (Web Only) */}
-      {Platform.OS === 'web' && showScrollTop && (
-        <TouchableOpacity
-          style={styles.scrollToTopButton}
-          onPress={scrollToTop}
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-6 w-12 h-12 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-50"
         >
-          <ChevronUp size={24} color="#ffffff" strokeWidth={2} />
-        </TouchableOpacity>
+          <ChevronUp className="w-6 h-6" />
+        </button>
       )}
 
       {/* Pay Confirmation Modal */}
-      <Modal
-        visible={payModal}
-        animationType="slide"
-        transparent={true}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.payModal}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>You are about to send</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setPayModal(false)}
+      {payModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
+          <div className="bg-white rounded-t-3xl w-full max-w-lg p-6 pb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">You are about to send</h3>
+              <button
+                onClick={() => setPayModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
               >
-                <X size={24} color="#6b7280" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
+                <X className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
 
             {selectedOffer && (
-              <View style={styles.payContent}>
-                <View style={styles.paySummary}>
-                  <View style={styles.payRow}>
-                    <Text style={styles.payLabel}>Amount:</Text>
-                    <Text style={styles.payValue}>{selectedOffer.price} FBC</Text>
-                  </View>
-                  <View style={styles.payRow}>
-                    <Text style={styles.payLabel}>Product:</Text>
-                    <Text style={styles.payValue}>{selectedOffer.title}</Text>
-                  </View>
-                  <View style={styles.payRow}>
-                    <Text style={styles.payLabel}>Recipient:</Text>
-                    <Text style={styles.payValue}>{selectedOffer.author}</Text>
-                  </View>
-                </View>
+              <div className="space-y-6">
+                <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount:</span>
+                    <span className="font-semibold">{selectedOffer.price} FBC</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Product:</span>
+                    <span className="font-semibold">{selectedOffer.title}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Recipient:</span>
+                    <span className="font-semibold">{selectedOffer.author}</span>
+                  </div>
+                </div>
 
-                <View style={styles.noteSection}>
-                  <View style={styles.noteHeader}>
-                    <StickyNote size={16} color="#6b7280" strokeWidth={2} />
-                    <Text style={styles.noteLabel}>Note (optional)</Text>
-                  </View>
-                  <TextInput
-                    style={styles.noteInput}
+                <div>
+                  <div className="flex items-center mb-2">
+                    <StickyNote className="w-4 h-4 text-gray-500 mr-2" />
+                    <label className="text-sm font-medium text-gray-700">Note (optional)</label>
+                  </div>
+                  <textarea
                     value={paymentNote}
-                    onChangeText={setPaymentNote}
+                    onChange={(e) => setPaymentNote(e.target.value)}
                     placeholder="Add a note for this payment..."
-                    multiline
-                    numberOfLines={2}
+                    rows={2}
+                    className="input resize-none"
                   />
-                </View>
+                </div>
 
-                <TouchableOpacity
-                  style={styles.termsRow}
-                  onPress={() => setAgreeTerms(!agreeTerms)}
-                >
-                  <View style={[styles.checkbox, agreeTerms && styles.checkedBox]}>
-                    {agreeTerms && <CheckCircle size={16} color="#ffffff" strokeWidth={2} />}
-                  </View>
-                  <Text style={styles.termsText}>I agree with the terms</Text>
-                </TouchableOpacity>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="agree-terms"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="w-5 h-5 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                  />
+                  <label htmlFor="agree-terms" className="ml-3 text-gray-700">
+                    I agree with the terms
+                  </label>
+                </div>
 
-                <TouchableOpacity
-                  style={[styles.proceedButton, !agreeTerms && styles.disabledButton]}
-                  onPress={handleProceedToPay}
+                <button
+                  onClick={handleProceedToPay}
                   disabled={!agreeTerms}
+                  className={`w-full py-4 rounded-xl font-semibold transition-colors ${
+                    agreeTerms
+                      ? 'bg-primary-500 hover:bg-primary-600 text-white'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
                   data-id="btn-proceed-pay"
                 >
-                  <Text style={[styles.proceedButtonText, !agreeTerms && styles.disabledButtonText]}>
-                    Proceed to pay
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                  Proceed to pay
+                </button>
+              </div>
             )}
-          </View>
-        </View>
-      </Modal>
+          </div>
+        </div>
+      )}
 
       {/* Payment Success Modal */}
-      <Modal
-        visible={paymentSuccess}
-        animationType="slide"
-        transparent={true}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.successModal}>
-            <CheckCircle size={64} color="#10B981" strokeWidth={2} />
-            <Text style={styles.successTitle}>Payment created</Text>
-            <Text style={styles.successSubtitle}>awaiting confirmation</Text>
-            
-            <TouchableOpacity
-              style={styles.doneButton}
-              onPress={() => {
-                setPaymentSuccess(false);
-                setSelectedOffer(null);
+      {paymentSuccess && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50">
+          <div className="bg-white rounded-t-3xl w-full max-w-lg p-8 text-center">
+            <CheckCircle className="w-16 h-16 text-success-500 mx-auto mb-6" />
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Payment created</h3>
+            <p className="text-gray-600 mb-8">awaiting confirmation</p>
+            <button
+              onClick={() => {
+                setPaymentSuccess(false)
+                setSelectedOffer(null)
               }}
+              className="btn-primary"
             >
-              <Text style={styles.doneButtonText}>Done</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
-  );
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  scrollContent: {
-    paddingBottom: 24,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 24,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-    textAlign: 'center',
-    marginBottom: 4,
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 32,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-    minHeight: 48,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1f2937',
-    marginLeft: 12,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  seeAllButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3B82F6',
-  },
-  offersSection: {
-    marginBottom: 32,
-  },
-  offersSectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
-    textAlign: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 16,
-  },
-  offersScrollContainer: {
-    paddingHorizontal: 16,
-    paddingRight: 32,
-  },
-  emptyOffersContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  offerCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    width: 280,
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-    overflow: 'hidden',
-  },
-  offerImage: {
-    width: '100%',
-    height: 120,
-  },
-  offerContent: {
-    padding: 16,
-  },
-  offerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 8,
-  },
-  offerDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  offerFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  offerAuthor: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  offerPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#10B981',
-  },
-  offerPayButton: {
-    backgroundColor: '#3B82F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: 12,
-    minHeight: 36,
-  },
-  offerPayButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  personCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  personAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    marginRight: 16,
-  },
-  personInfo: {
-    flex: 1,
-  },
-  personHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  personName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1f2937',
-    flex: 1,
-  },
-  trustContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  trustNumber: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3B82F6',
-    backgroundColor: '#EBF4FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  personUsername: {
-    fontSize: 14,
-    color: '#3B82F6',
-    marginBottom: 6,
-  },
-  personBio: {
-    fontSize: 14,
-    color: '#6b7280',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  personStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statsText: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  categoriesContainer: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  categoryTag: {
-    backgroundColor: '#EBF4FF',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  categoryText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#3B82F6',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  closeButton: {
-    padding: 8,
-    borderRadius: 12,
-    minHeight: 44,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  payModal: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-  },
-  payContent: {
-    padding: 24,
-  },
-  paySummary: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-  },
-  payRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  payLabel: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  payValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  noteSection: {
-    marginBottom: 24,
-  },
-  noteHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  noteLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6b7280',
-    marginLeft: 6,
-  },
-  noteInput: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#1f2937',
-    textAlignVertical: 'top',
-    minHeight: 60,
-  },
-  termsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderWidth: 2,
-    borderColor: '#d1d5db',
-    borderRadius: 6,
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkedBox: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
-  },
-  termsText: {
-    fontSize: 16,
-    color: '#1f2937',
-  },
-  proceedButton: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 16,
-    borderRadius: 18,
-    alignItems: 'center',
-    minHeight: 56,
-  },
-  proceedButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  disabledButton: {
-    backgroundColor: '#f3f4f6',
-  },
-  disabledButtonText: {
-    color: '#9ca3af',
-  },
-  successModal: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 40,
-    alignItems: 'center',
-  },
-  successTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  successSubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 32,
-  },
-  doneButton: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 18,
-    minHeight: 56,
-    minWidth: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doneButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  scrollToTopButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 100,
-  },
-});

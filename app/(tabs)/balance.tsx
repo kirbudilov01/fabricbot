@@ -1,20 +1,9 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  FlatList,
-  Modal,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Wallet, TrendingUp, Clock, ArrowUpRight, ArrowDownRight, CreditCard, ChartBar as BarChart3, X, Users, ChevronUp } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useAppData } from '@/src/shared/lib/store';
-import * as api from '@/src/shared/api/methods';
+'use client'
+
+import { useState } from 'react'
+import { Wallet, TrendingUp, Clock, Users, CreditCard } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useAppData } from '@/lib/store'
 
 const topReferrals = [
   { id: '1', username: '@alex_designer', totalEarned: '45.50', deals: 12 },
@@ -22,7 +11,7 @@ const topReferrals = [
   { id: '3', username: '@ivan_writer', totalEarned: '28.75', deals: 6 },
   { id: '4', username: '@kate_photo', totalEarned: '15.25', deals: 4 },
   { id: '5', username: '@dmitry_video', totalEarned: '12.00', deals: 3 },
-];
+]
 
 const mockTransactions = [
   { 
@@ -56,808 +45,228 @@ const mockTransactions = [
     description: 'SMM Campaign',
     status: 'completed' 
   },
-];
+]
 
 const mockPayouts = [
   { id: '1', amount: '100.00', method: 'Telegram Wallet', status: 'paid' },
   { id: '2', amount: '50.00', method: 'Telegram Wallet', status: 'processing' },
-];
-
-const pendingTransactions = [
-  { id: '1', date: '2025-01-16', type: 'creator', amount: '15.00', status: 'created', description: 'Logo Design' },
-  { id: '2', date: '2025-01-15', type: 'referral', amount: '10.00', status: 'in_work', description: 'Website Creation' },
-  { id: '3', date: '2025-01-14', type: 'creator', amount: '5.00', status: 'paid', description: 'SMM Consultation' },
-];
+]
 
 export default function BalanceTab() {
-  const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
-  const { data } = useAppData();
-  const [activeTab, setActiveTab] = useState('referrals');
-  const [pendingModal, setPendingModal] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const router = useRouter()
+  const { data } = useAppData()
+  const [activeTab, setActiveTab] = useState('referrals')
 
   // Compute KPIs from store data
   const computeKPIs = () => {
-    // Creator balance = sum of ['deposit','release'] - ['withdraw','fee']
     const creatorBalance = data.ledger.reduce((sum, entry) => {
       if (['deposit', 'release'].includes(entry.kind)) {
-        return sum + parseFloat(entry.amountFBC);
+        return sum + parseFloat(entry.amountFBC)
       } else if (['withdraw', 'fee'].includes(entry.kind)) {
-        return sum - parseFloat(entry.amountFBC);
+        return sum - parseFloat(entry.amountFBC)
       }
-      return sum;
-    }, 0);
+      return sum
+    }, 0)
 
-    // Referral balance = sum of ['ref_bonus'] - ['withdraw']
     const referralBalance = data.ledger.reduce((sum, entry) => {
       if (entry.kind === 'ref_bonus') {
-        return sum + parseFloat(entry.amountFBC);
+        return sum + parseFloat(entry.amountFBC)
       } else if (entry.kind === 'withdraw') {
-        return sum - parseFloat(entry.amountFBC);
+        return sum - parseFloat(entry.amountFBC)
       }
-      return sum;
-    }, 0);
+      return sum
+    }, 0)
 
-    // Pending = sum of store.deals with status 'pending'
     const pendingAmount = data.deals
       .filter(deal => deal.status === 'pending')
-      .reduce((sum, deal) => sum + parseFloat(deal.amountFBC), 0);
+      .reduce((sum, deal) => sum + parseFloat(deal.amountFBC), 0)
 
-    const totalBalance = creatorBalance + referralBalance;
+    const totalBalance = creatorBalance + referralBalance
 
     return {
       creatorBalance: creatorBalance.toFixed(2),
       referralBalance: referralBalance.toFixed(2),
       pendingAmount: pendingAmount.toFixed(2),
       totalBalance: totalBalance.toFixed(0)
-    };
-  };
+    }
+  }
 
-  const kpis = computeKPIs();
+  const kpis = computeKPIs()
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
       case 'completed':
-      case 'paid':
-        return '#10B981';
-      case 'in_work':
+        return 'text-success-500'
       case 'processing':
-        return '#F59E0B';
-      case 'created':
-        return '#6B7280';
+        return 'text-warning-500'
       default:
-        return '#3B82F6';
+        return 'text-gray-500'
     }
-  };
-
-  const getStatusText = (status: string) => {
-    const statusMap: { [key: string]: string } = {
-      created: 'created',
-      paid: 'paid',
-      in_work: 'in work',
-      completed: 'completed',
-      processing: 'processing',
-      released_author: 'released to author',
-      ref_payout_done: 'ref payout done',
-    };
-    return statusMap[status] || status;
-  };
-
-  const handleScroll = (event: any) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    setShowScrollTop(offsetY > 300);
-  };
-
-  const scrollToTop = () => {
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-  };
-
-  const renderReferralItem = ({ item }: { item: any }) => (
-    <View key={item.id} style={styles.referralItem}>
-      <View style={styles.referralLeft}>
-        <View style={styles.referralIcon}>
-          <Users size={16} color="#10B981" strokeWidth={2} />
-        </View>
-        <View style={styles.referralInfo}>
-          <Text style={styles.referralUsername}>{item.username}</Text>
-          <Text style={styles.referralDeals}>{item.deals} deals</Text>
-        </View>
-      </View>
-      <Text style={styles.referralEarned}>+{item.totalEarned} FBC</Text>
-    </View>
-  );
-
-  const renderTransaction = ({ item }: { item: any }) => (
-    <View key={item.id} style={styles.transactionItem}>
-      <View style={styles.transactionContent}>
-        <View style={styles.transactionLeft}>
-          <View style={styles.transactionIcon}>
-            <ArrowUpRight size={16} color="#10B981" strokeWidth={2} />
-          </View>
-          <View style={styles.transactionInfo}>
-            {item.type === 'payment_received' ? (
-              <Text style={styles.transactionDescription}>
-                Payment received {item.amount} FBC - You got {item.yourAmount} FBC, {item.refUser} got {item.refAmount} FBC
-              </Text>
-            ) : (
-              <Text style={styles.transactionDescription}>
-                You received ref bonus {item.amount} FBC for client {item.client} payment
-              </Text>
-            )}
-            <Text style={styles.transactionDate}>{item.date} • {item.description}</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.detailsButton} disabled={true}>
-          <Text style={styles.detailsButtonText}>Details</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
-        <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-          {getStatusText(item.status)}
-        </Text>
-      </View>
-    </View>
-  );
-
-  const renderPayout = ({ item }: { item: any }) => (
-    <View key={item.id} style={styles.payoutItem}>
-      <View style={styles.payoutLeft}>
-        <View style={styles.payoutIcon}>
-          <CreditCard size={16} color="#8B5CF6" strokeWidth={2} />
-        </View>
-        <View style={styles.payoutInfo}>
-          <Text style={styles.payoutAmount}>{item.amount} FBC</Text>
-          <Text style={styles.payoutMethod}>{item.method}</Text>
-        </View>
-      </View>
-      <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
-        <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-          {getStatusText(item.status)}
-        </Text>
-      </View>
-    </View>
-  );
-
-  const renderPendingTransaction = ({ item }: { item: any }) => (
-    <View key={item.id} style={styles.pendingTransactionItem}>
-      <View style={styles.pendingTransactionLeft}>
-        <View style={[styles.transactionIcon, { backgroundColor: item.type === 'creator' ? '#EBF4FF' : '#F0FDF4' }]}>
-          {item.type === 'creator' ? (
-            <ArrowUpRight size={16} color="#3B82F6" strokeWidth={2} />
-          ) : (
-            <ArrowDownRight size={16} color="#10B981" strokeWidth={2} />
-          )}
-        </View>
-        <View style={styles.pendingTransactionInfo}>
-          <Text style={styles.pendingTransactionType}>{item.type}</Text>
-          <Text style={styles.pendingTransactionDescription}>{item.description}</Text>
-          <Text style={styles.pendingTransactionDate}>{item.date}</Text>
-        </View>
-      </View>
-      <View style={styles.pendingTransactionRight}>
-        <Text style={styles.pendingTransactionAmount}>{item.amount} FBC</Text>
-        <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {getStatusText(item.status)}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
+  }
 
   return (
-    <SafeAreaView style={styles.container} data-id="tab-balance">
-      <ScrollView 
-        ref={scrollViewRef}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: tabBarHeight + 24 }
-        ]}
-        scrollEventThrottle={16}
-        bounces={false}
-        contentInsetAdjustmentBehavior="never"
-        keyboardShouldPersistTaps="handled"
-        onScroll={handleScroll}
-      >
+    <div className="min-h-screen bg-slate-50 pb-20" data-id="tab-balance">
+      <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>MY BALANCE</Text>
-          <Text style={styles.subtitle}>Track your earnings and payouts</Text>
-        </View>
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">MY BALANCE</h1>
+          <p className="text-gray-600">Track your earnings and payouts</p>
+        </div>
 
         {/* Total Balance */}
-        <View style={styles.totalBalanceCard}>
-          <Text style={styles.totalBalanceLabel}>Your balance</Text>
-          <Text style={styles.totalBalanceAmount}>{kpis.totalBalance} FBC</Text>
-          <Text style={styles.totalBalanceNote}>1 TON = 1 FBC</Text>
-        </View>
+        <div className="card p-8 text-center mb-6">
+          <p className="text-gray-600 mb-2">Your balance</p>
+          <h2 className="text-4xl font-bold text-primary-500 mb-2">{kpis.totalBalance} FBC</h2>
+          <p className="text-sm text-gray-500 italic">1 TON = 1 FBC</p>
+        </div>
 
         {/* Balance Summary */}
-        <View style={styles.balanceGrid}>
-          <View style={styles.balanceCard} data-id="kpi-creator">
-            <Text style={styles.balanceLabel}>Creator balance</Text>
-            <Text style={styles.balanceAmount}>{kpis.creatorBalance} FBC</Text>
-          </View>
-          <View style={styles.balanceCard} data-id="kpi-referral">
-            <Text style={styles.balanceLabel}>Referral balance</Text>
-            <Text style={styles.balanceAmount}>{kpis.referralBalance} FBC</Text>
-          </View>
-        </View>
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="card p-6" data-id="kpi-creator">
+            <p className="text-gray-600 mb-2">Creator balance</p>
+            <p className="text-2xl font-bold text-gray-900">{kpis.creatorBalance} FBC</p>
+          </div>
+          <div className="card p-6" data-id="kpi-referral">
+            <p className="text-gray-600 mb-2">Referral balance</p>
+            <p className="text-2xl font-bold text-gray-900">{kpis.referralBalance} FBC</p>
+          </div>
+        </div>
 
-        <TouchableOpacity 
-          style={styles.pendingCard}
-          onPress={() => router.push('/pending-deals')}
+        {/* Pending */}
+        <button 
+          onClick={() => router.push('/pending-deals')}
+          className="w-full card p-6 mb-6 text-center hover:shadow-md transition-shadow"
           data-id="balance-pending-card"
         >
-          <View style={styles.pendingLeft}>
-            <Clock size={20} color="#F59E0B" strokeWidth={2} />
-            <View style={styles.pendingInfo}>
-              <Text style={styles.pendingLabel}>Pending</Text>
-              <Text style={styles.pendingAmount}>{kpis.pendingAmount} FBC</Text>
-            </View>
-          </View>
-          <View style={styles.pendingRight}>
-            <View style={styles.pendingBadge}>
-              <Text style={styles.pendingBadgeText}>awaiting confirmation</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
+          <div className="flex items-center justify-center mb-4">
+            <Clock className="w-6 h-6 text-warning-500 mr-3" />
+            <div>
+              <p className="text-gray-600">Pending</p>
+              <p className="text-xl font-bold text-gray-900">{kpis.pendingAmount} FBC</p>
+            </div>
+          </div>
+          <div className="bg-warning-50 text-warning-600 px-4 py-2 rounded-xl text-sm font-medium inline-block">
+            awaiting confirmation
+          </div>
+        </button>
 
-        {/* Top Up Button */}
-        <TouchableOpacity style={styles.topUpButton} data-id="btn-topup">
-          <Wallet size={20} color="#10B981" strokeWidth={2} />
-          <Text style={styles.topUpButtonText}>Top up balance</Text>
-        </TouchableOpacity>
-
-        {/* Withdraw Button */}
-        <TouchableOpacity style={styles.withdrawButton} data-id="btn-withdraw">
-          <Wallet size={20} color="#ffffff" strokeWidth={2} />
-          <Text style={styles.withdrawButtonText}>Withdraw</Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <div className="grid md:grid-cols-2 gap-4 mb-8">
+          <button className="btn-secondary flex items-center justify-center" data-id="btn-topup">
+            <Wallet className="w-5 h-5 mr-2 text-success-500" />
+            Top up balance
+          </button>
+          <button className="btn-primary flex items-center justify-center" data-id="btn-withdraw">
+            <Wallet className="w-5 h-5 mr-2" />
+            Withdraw
+          </button>
+        </div>
 
         {/* Tabs */}
-        <View style={styles.tabsContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'referrals' && styles.activeTab]}
-            onPress={() => setActiveTab('referrals')}
-          >
-            <Users size={18} color={activeTab === 'referrals' ? '#3B82F6' : '#6B7280'} strokeWidth={2} />
-            <Text style={[styles.tabText, activeTab === 'referrals' && styles.activeTabText]}>
-              Top Referrals
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'transactions' && styles.activeTab]}
-            onPress={() => setActiveTab('transactions')}
-          >
-            <TrendingUp size={18} color={activeTab === 'transactions' ? '#3B82F6' : '#6B7280'} strokeWidth={2} />
-            <Text style={[styles.tabText, activeTab === 'transactions' && styles.activeTabText]}>
-              Transactions
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'payouts' && styles.activeTab]}
-            onPress={() => setActiveTab('payouts')}
-          >
-            <CreditCard size={18} color={activeTab === 'payouts' ? '#3B82F6' : '#6B7280'} strokeWidth={2} />
-            <Text style={[styles.tabText, activeTab === 'payouts' && styles.activeTabText]}>
-              Payouts
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <div className="card p-1 mb-8">
+          <div className="flex">
+            {[
+              { id: 'referrals', label: 'Top Referrals', icon: Users },
+              { id: 'transactions', label: 'Transactions', icon: TrendingUp },
+              { id: 'payouts', label: 'Payouts', icon: CreditCard },
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex-1 flex items-center justify-center py-3 px-4 rounded-xl font-medium transition-colors ${
+                  activeTab === id
+                    ? 'bg-primary-50 text-primary-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="w-4 h-4 mr-2" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Tab Content */}
-        <View style={styles.tabContent}>
+        <div className="card p-6">
           {activeTab === 'referrals' && (
-            <View data-id="list-referrals">
-              {topReferrals.map((item) => renderReferralItem({ item }))}
-            </View>
+            <div className="space-y-4" data-id="list-referrals">
+              {topReferrals.map((item) => (
+                <div key={item.id} className="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-success-50 rounded-full flex items-center justify-center mr-4">
+                      <Users className="w-4 h-4 text-success-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{item.username}</p>
+                      <p className="text-sm text-gray-600">{item.deals} deals</p>
+                    </div>
+                  </div>
+                  <p className="font-bold text-success-500">+{item.totalEarned} FBC</p>
+                </div>
+              ))}
+            </div>
           )}
 
           {activeTab === 'transactions' && (
-            <View data-id="list-transactions">
-              {mockTransactions.map((item) => renderTransaction({ item }))}
-            </View>
+            <div className="space-y-6" data-id="list-transactions">
+              {mockTransactions.map((item) => (
+                <div key={item.id} className="border-b border-gray-100 pb-6 last:border-b-0">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-start">
+                      <div className="w-8 h-8 bg-success-50 rounded-full flex items-center justify-center mr-4 mt-1">
+                        <TrendingUp className="w-4 h-4 text-success-500" />
+                      </div>
+                      <div>
+                        <p className="text-gray-900 mb-1">
+                          {item.type === 'payment_received' 
+                            ? `Payment received ${item.amount} FBC - You got ${item.yourAmount} FBC, ${item.refUser} got ${item.refAmount} FBC`
+                            : `You received ref bonus ${item.amount} FBC for client ${item.client} payment`
+                          }
+                        </p>
+                        <p className="text-sm text-gray-600">{item.date} • {item.description}</p>
+                      </div>
+                    </div>
+                    <button className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-lg">
+                      Details
+                    </button>
+                  </div>
+                  <div className="ml-12">
+                    <span className={`bg-success-50 text-success-600 px-3 py-1 rounded-lg text-xs font-medium ${getStatusColor(item.status)}`}>
+                      {item.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
           {activeTab === 'payouts' && (
-            <View data-id="list-payouts">
-              {mockPayouts.map((item) => renderPayout({ item }))}
-            </View>
+            <div className="space-y-4" data-id="list-payouts">
+              {mockPayouts.map((item) => (
+                <div key={item.id} className="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-purple-50 rounded-full flex items-center justify-center mr-4">
+                      <CreditCard className="w-4 h-4 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{item.amount} FBC</p>
+                      <p className="text-sm text-gray-600">{item.method}</p>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 rounded-lg text-xs font-medium ${
+                    item.status === 'paid' 
+                      ? 'bg-success-50 text-success-600'
+                      : 'bg-warning-50 text-warning-600'
+                  }`}>
+                    {item.status}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
-        </View>
-      </ScrollView>
-
-      {/* Scroll to Top Button (Web Only) */}
-      {Platform.OS === 'web' && showScrollTop && (
-        <TouchableOpacity
-          style={styles.scrollToTopButton}
-          onPress={scrollToTop}
-        >
-          <ChevronUp size={24} color="#ffffff" strokeWidth={2} />
-        </TouchableOpacity>
-      )}
-
-      {/* Pending Transactions Modal */}
-      <Modal
-        visible={pendingModal}
-        animationType="slide"
-        transparent={true}
-        data-id="modal-pending-transactions"
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Pending Deals</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setPendingModal(false)}
-              >
-                <X size={24} color="#6b7280" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView 
-              showsVerticalScrollIndicator={false}
-              bounces={false}
-              keyboardShouldPersistTaps="handled"
-            >
-              {pendingTransactions.map((item) => renderPendingTransaction({ item }))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
-  );
+        </div>
+      </div>
+    </div>
+  )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  header: {
-    marginBottom: 32,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 4,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  totalBalanceCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    alignItems: 'center',
-  },
-  totalBalanceLabel: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  totalBalanceAmount: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#3B82F6',
-    marginBottom: 8,
-  },
-  totalBalanceNote: {
-    fontSize: 14,
-    color: '#9ca3af',
-    fontStyle: 'italic',
-  },
-  balanceGrid: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 16,
-    justifyContent: 'center',
-  },
-  balanceCard: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  balanceLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  balanceAmount: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  pendingCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  pendingLeft: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-    justifyContent: 'center',
-  },
-  pendingInfo: {
-    marginLeft: 12,
-    alignItems: 'center',
-  },
-  pendingLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  pendingAmount: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  pendingRight: {
-    alignItems: 'flex-end',
-    alignItems: 'center',
-  },
-  pendingBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  pendingBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#D97706',
-  },
-  topUpButton: {
-    backgroundColor: '#ffffff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 18,
-    marginBottom: 16,
-    minHeight: 56,
-    borderWidth: 2,
-    borderColor: '#10B981',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  topUpButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#10B981',
-    marginLeft: 8,
-  },
-  withdrawButton: {
-    backgroundColor: '#3B82F6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 18,
-    marginBottom: 32,
-    minHeight: 56,
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  withdrawButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginLeft: 8,
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 4,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    minHeight: 44,
-  },
-  activeTab: {
-    backgroundColor: '#EBF4FF',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginLeft: 6,
-  },
-  activeTabText: {
-    color: '#3B82F6',
-  },
-  tabContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  referralItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  referralLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  referralIcon: {
-    width: 32,
-    height: 32,
-    backgroundColor: '#F0FDF4',
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  referralInfo: {
-    marginLeft: 12,
-  },
-  referralUsername: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 2,
-  },
-  referralDeals: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  referralEarned: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#10B981',
-  },
-  transactionItem: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  transactionContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  transactionLeft: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    flex: 1,
-  },
-  transactionIcon: {
-    width: 32,
-    height: 32,
-    backgroundColor: '#F0FDF4',
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  transactionInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  transactionDescription: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
-    marginBottom: 4,
-    lineHeight: 22,
-  },
-  transactionDate: {
-    fontSize: 13,
-    color: '#6b7280',
-  },
-  detailsButton: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  detailsButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#9ca3af',
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  payoutItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  payoutLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  payoutIcon: {
-    width: 32,
-    height: 32,
-    backgroundColor: '#F3E8FF',
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  payoutInfo: {
-    marginLeft: 12,
-  },
-  payoutAmount: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 2,
-  },
-  payoutMethod: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  closeButton: {
-    padding: 8,
-    borderRadius: 12,
-    minHeight: 44,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pendingTransactionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  pendingTransactionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  pendingTransactionInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  pendingTransactionType: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 2,
-  },
-  pendingTransactionDescription: {
-    fontSize: 14,
-    color: '#4b5563',
-    marginBottom: 2,
-  },
-  pendingTransactionDate: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  pendingTransactionRight: {
-    alignItems: 'flex-end',
-  },
-  pendingTransactionAmount: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#10B981',
-    marginBottom: 4,
-  },
-  scrollToTopButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 100,
-  },
-});

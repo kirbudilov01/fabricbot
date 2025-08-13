@@ -1,326 +1,113 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link2, Settings, ChevronRight } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useAppData } from '@/src/shared/lib/store';
-import { LinkItemSkeleton } from '@/components/SkeletonLoader';
-import EmptyState from '@/components/EmptyState';
+'use client'
+
+import { useState } from 'react'
+import { Link2, Settings, ChevronRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useAppData } from '@/lib/store'
+import { LinkItemSkeleton } from '@/components/SkeletonLoader'
+import EmptyState from '@/components/EmptyState'
 
 export default function PageSetupTab() {
-  const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
-  const { data } = useAppData();
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const router = useRouter()
+  const { data } = useAppData()
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
   return (
-    <SafeAreaView style={styles.container} data-id="tab-links">
-      <ScrollView 
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: tabBarHeight + 24 }
-        ]}
-        scrollEventThrottle={16}
-        bounces={false}
-        contentInsetAdjustmentBehavior="never"
-        keyboardShouldPersistTaps="handled"
-      >
+    <div className="min-h-screen bg-slate-50 pb-20" data-id="tab-links">
+      <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>MY PAGE & LINKS</Text>
-          <Text style={styles.subtitle}>Manage your profile and products</Text>
-        </View>
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">MY PAGE & LINKS</h1>
+          <p className="text-gray-600">Manage your profile and products</p>
+        </div>
 
         {/* Main Actions */}
-        <View style={styles.mainActionsSection}>
-          <TouchableOpacity 
-            style={styles.actionCard}
-            onPress={() => router.push('/personal-links')}
+        <div className="space-y-6 mb-8">
+          <button
+            onClick={() => router.push('/personal-links')}
+            className="w-full card p-8 flex items-center justify-between hover:shadow-md transition-shadow border-2 border-success-500"
             data-id="btn-personal-links"
           >
-            <View style={styles.actionCardLeft}>
-              <View style={[styles.actionCardIcon, { backgroundColor: '#F0FDF4' }]}>
-                <Link2 size={24} color="#10B981" strokeWidth={2} />
-              </View>
-              <View style={styles.actionCardInfo}>
-                <Text style={styles.actionCardTitle}>Personal payment links</Text>
-                <Text style={styles.actionCardSubtitle}>Create referral links and track payouts</Text>
-              </View>
-            </View>
-            <ChevronRight size={20} color="#9CA3AF" strokeWidth={2} />
-          </TouchableOpacity>
+            <div className="flex items-center">
+              <div className="w-14 h-14 bg-success-50 rounded-full flex items-center justify-center mr-6">
+                <Link2 className="w-6 h-6 text-success-500" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Personal payment links</h3>
+                <p className="text-gray-600">Create referral links and track payouts</p>
+              </div>
+            </div>
+            <ChevronRight className="w-6 h-6 text-gray-400" />
+          </button>
 
-          <TouchableOpacity 
-            style={[styles.actionCard, styles.secondaryActionCard]}
-            onPress={() => router.push('/configure-page')}
+          <button
+            onClick={() => router.push('/configure-page')}
+            className="w-full card p-6 flex items-center justify-between hover:shadow-md transition-shadow border border-gray-200"
             data-id="btn-configure-page"
           >
-            <View style={styles.actionCardLeft}>
-              <View style={[styles.actionCardIcon, { backgroundColor: '#EBF4FF' }]}>
-                <Settings size={24} color="#3B82F6" strokeWidth={2} />
-              </View>
-              <View style={styles.actionCardInfo}>
-                <Text style={styles.secondaryActionCardTitle}>Configure My Page</Text>
-                <Text style={styles.secondaryActionCardSubtitle}>Edit profile, categories, and products</Text>
-              </View>
-            </View>
-            <ChevronRight size={20} color="#9CA3AF" strokeWidth={2} />
-          </TouchableOpacity>
-
-        </View>
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center mr-4">
+                <Settings className="w-6 h-6 text-primary-500" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-gray-700 mb-1">Configure My Page</h3>
+                <p className="text-gray-500 text-sm">Edit profile, categories, and products</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
 
         {/* Payment History Section */}
-        <View style={styles.paymentHistorySection}>
-          <Text style={styles.sectionTitle}>Payment Receipts + Referral Payouts</Text>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Payment Receipts + Referral Payouts</h2>
           
           {isLoadingHistory ? (
-            <View style={styles.historyList} data-id="list-links">
+            <div className="card p-6" data-id="list-links">
               <LinkItemSkeleton />
               <LinkItemSkeleton />
               <LinkItemSkeleton />
-            </View>
+            </div>
           ) : data.deals.length > 0 ? (
-            <View style={styles.historyList} data-id="list-links">
-              {data.deals.map((deal) => (
-                <View key={deal.id} style={styles.historyItem}>
-                  <View style={styles.historyContent}>
-                    <View style={styles.historyLeft}>
-                      <Text style={styles.historyTitle}>{deal.title || 'Deal'}</Text>
-                      <Text style={styles.historyAmount}>{deal.amountFBC} FBC</Text>
-                      <Text style={styles.historyDate}>{deal.date}</Text>
-                      <View style={styles.historyUsers}>
-                        <Text style={styles.historyPaidBy}>Paid by @user</Text>
+            <div className="card overflow-hidden" data-id="list-links">
+              {data.deals.map((deal, index) => (
+                <div key={deal.id} className={`p-6 ${index !== data.deals.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 mb-1">{deal.title || 'Deal'}</h3>
+                      <p className="text-xl font-bold text-success-500 mb-1">{deal.amountFBC} FBC</p>
+                      <p className="text-sm text-gray-600 mb-2">{deal.date}</p>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-gray-700">Paid by @user</p>
                         {deal.refUsername && (
-                          <Text style={styles.historyReferral}>Referral {deal.refUsername}</Text>
+                          <p className="text-sm font-medium text-primary-500">Referral {deal.refUsername}</p>
                         )}
-                      </View>
-                    </View>
-                    <View style={styles.historyRight}>
-                      <View style={[
-                        styles.historyStatusChip,
-                        { backgroundColor: deal.status === 'released' ? '#F0FDF4' : '#FEF3C7' }
-                      ]}>
-                        <Text style={[
-                          styles.historyStatusText,
-                          { color: deal.status === 'released' ? '#10B981' : '#D97706' }
-                        ]}>
-                          {deal.status === 'released' ? 'Payment received' : 'Pending'}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-3 py-1 rounded-xl text-xs font-semibold ${
+                        deal.status === 'released' 
+                          ? 'bg-success-50 text-success-600' 
+                          : 'bg-warning-50 text-warning-600'
+                      }`}>
+                        {deal.status === 'released' ? 'Payment received' : 'Pending'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </View>
+            </div>
           ) : (
-            <View style={styles.emptyHistory} data-id="list-links">
+            <div className="card p-8" data-id="list-links">
               <EmptyState 
                 type="links" 
                 onAction={() => router.push('/personal-links')}
                 actionText="Create payment link"
               />
-            </View>
+            </div>
           )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+        </div>
+      </div>
+    </div>
+  )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  header: {
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 4,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  mainActionsSection: {
-    marginBottom: 24,
-  },
-  actionCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 2,
-    borderColor: '#10B981',
-  },
-  secondaryActionCard: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  actionCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  actionCardIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  actionCardInfo: {
-    flex: 1,
-  },
-  actionCardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  actionCardSubtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    lineHeight: 22,
-  },
-  secondaryActionCardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 4,
-  },
-  secondaryActionCardSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    lineHeight: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 16,
-  },
-  paymentHistorySection: {
-    marginTop: 32,
-  },
-  historyList: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-    overflow: 'hidden',
-  },
-  historyItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  historyContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  historyLeft: {
-    flex: 1,
-    marginRight: 16,
-  },
-  historyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  historyAmount: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#10B981',
-    marginBottom: 4,
-  },
-  historyDate: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  historyUsers: {
-    gap: 4,
-  },
-  historyPaidBy: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  historyReferral: {
-    fontSize: 14,
-    color: '#3B82F6',
-    fontWeight: '500',
-  },
-  historyRight: {
-    alignItems: 'flex-end',
-  },
-  historyStatusChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  historyStatusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  emptyHistory: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-});
