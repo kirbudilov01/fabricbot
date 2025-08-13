@@ -1,27 +1,24 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Plus, Copy, Trash2, X, Save } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import { useAppData } from '@/src/shared/lib/store';
-import EmptyState from '@/components/EmptyState';
+'use client';
 
-export default function PersonalLinksScreen() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Plus, Copy, Trash2, X, Save } from 'lucide-react';
+
+interface LinkItem {
+  id: string;
+  username: string;
+  productId: string;
+  productTitle: string;
+  link: string;
+  createdAt: string;
+}
+
+export default function PersonalLinksPage() {
   const router = useRouter();
-  const { data, addLink, deleteLink } = useAppData();
-  const { categories, links } = data;
 
-  const [createLinkModal, setCreateLinkModal] = useState(false);
+  // mock data store
+  const [links, setLinks] = useState<LinkItem[]>([]);
+  const [createModal, setCreateModal] = useState(false);
   const [linkForm, setLinkForm] = useState({
     username: '',
     productId: '',
@@ -30,538 +27,217 @@ export default function PersonalLinksScreen() {
     customPrice: '',
     referralUsername: '',
     referralAmount: '',
-    isCustomProduct: false
+    isCustomProduct: false,
   });
 
-  // Get all products for dropdown
-  const getAllProducts = () => {
-    const allProducts: { id: string; title: string }[] = [];
-    categories.forEach(category => {
-      category.subcategories.forEach(subcategory => {
-        subcategory.products.forEach(product => {
-          allProducts.push({ id: product.id, title: product.title });
-        });
-      });
-    });
-    return allProducts;
-  };
+  const products = [
+    { id: '1', title: 'Product 1' },
+    { id: '2', title: 'Product 2' },
+  ];
 
-  const handleCreatePersonalLink = () => {
+  const handleCreate = () => {
     if (!linkForm.username.trim() || (!linkForm.productId && !linkForm.customProductTitle.trim())) return;
-
     const productTitle = linkForm.isCustomProduct ? linkForm.customProductTitle : linkForm.productTitle;
     const productId = linkForm.isCustomProduct ? `custom-${Date.now()}` : linkForm.productId;
-    
-    addLink({
-      username: linkForm.username,
-      productId: productId,
-      productTitle: productTitle,
-      link: `t.me/your_bot?startapp=product=${productId}&ref=${linkForm.username.replace('@', '')}`,
-      createdAt: new Date().toISOString().split('T')[0]
-    });
-    
-    setCreateLinkModal(false);
-    setLinkForm({ 
-      username: '', 
-      productId: '', 
+    setLinks(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(),
+        username: linkForm.username,
+        productId,
+        productTitle,
+        link: `https://t.me/your_bot?startapp=product=${productId}&ref=${linkForm.username.replace('@', '')}`,
+        createdAt: new Date().toISOString().split('T')[0],
+      },
+    ]);
+    setCreateModal(false);
+    setLinkForm({
+      username: '',
+      productId: '',
       productTitle: '',
       customProductTitle: '',
       customPrice: '',
       referralUsername: '',
       referralAmount: '',
-      isCustomProduct: false
+      isCustomProduct: false,
     });
   };
 
-  const handleCopyLink = (link: string) => {
-    // In real app, copy to clipboard
-    Alert.alert('Copied', `Link copied: ${link}`);
+  const handleCopy = (link: string) => {
+    navigator.clipboard.writeText(link);
+    alert(`Link copied: ${link}`);
   };
 
-  const handleDeletePersonalLink = (linkId: string) => {
-    Alert.alert(
-      'Delete Link',
-      'Are you sure you want to delete this personal link?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive',
-          onPress: () => deleteLink(linkId)
-        }
-      ]
-    );
+  const handleDelete = (id: string) => {
+    if (confirm('Delete this link?')) {
+      setLinks(prev => prev.filter(l => l.id !== id));
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        scrollEventThrottle={16}
-        bounces={false}
-        contentInsetAdjustmentBehavior="never"
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={24} color="#1f2937" strokeWidth={2} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Personal Links</Text>
-          <View style={styles.headerSpacer} />
-        </View>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b bg-white">
+        <button onClick={() => router.back()} className="p-2 rounded hover:bg-gray-100">
+          <ArrowLeft className="w-6 h-6 text-gray-800" />
+        </button>
+        <h1 className="text-lg font-bold text-gray-800">Personal Links</h1>
+        <div className="w-8" />
+      </div>
 
-        {/* Create Link Button */}
-        <View style={styles.createSection}>
-          <TouchableOpacity
-            style={styles.createLinkButton}
-            onPress={() => setCreateLinkModal(true)}
-          >
-            <Plus size={20} color="#ffffff" strokeWidth={2} />
-            <Text style={styles.createLinkButtonText}>Create New Link</Text>
-          </TouchableOpacity>
-        </View>
+      {/* Create Button */}
+      <div className="p-4">
+        <button
+          onClick={() => setCreateModal(true)}
+          className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white font-semibold py-3 rounded-lg shadow"
+        >
+          <Plus className="w-5 h-5" /> Create New Link
+        </button>
+      </div>
 
-        {/* Links List */}
-        <View style={styles.linksSection}>
-          <Text style={styles.sectionTitle}>Your Links</Text>
-          
-          {links.length > 0 ? (
-            <View style={styles.linksContainer}>
-              {links.map((link) => (
-                <View key={link.id} style={styles.linkCard}>
-                  <View style={styles.linkInfo}>
-                    <View style={styles.linkHeader}>
-                      <Text style={styles.linkUsername}>{link.username}</Text>
-                      <Text style={styles.linkDate}>{link.createdAt}</Text>
-                    </View>
-                    <Text style={styles.linkProduct}>{link.productTitle}</Text>
-                    <Text style={styles.linkUrl} numberOfLines={1}>{link.link}</Text>
-                  </View>
-                  <View style={styles.linkActions}>
-                    <TouchableOpacity
-                      style={styles.copyLinkButton}
-                      onPress={() => handleCopyLink(link.link)}
+      {/* Links List */}
+      <div className="p-4">
+        <h2 className="text-lg font-semibold mb-4">Your Links</h2>
+        {links.length > 0 ? (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            {links.map(link => (
+              <div key={link.id} className="flex justify-between items-center p-4 border-b last:border-b-0">
+                <div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-600 font-medium">{link.username}</span>
+                    <span className="text-xs text-gray-500">{link.createdAt}</span>
+                  </div>
+                  <div className="text-gray-800">{link.productTitle}</div>
+                  <div className="text-xs text-gray-500 truncate">{link.link}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleCopy(link.link)} className="p-2 hover:bg-gray-100 rounded">
+                    <Copy className="w-4 h-4 text-blue-500" />
+                  </button>
+                  <button onClick={() => handleDelete(link.id)} className="p-2 hover:bg-gray-100 rounded">
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg p-6 shadow text-center text-gray-500">
+            No links yet. Click "Create New Link" to add one.
+          </div>
+        )}
+      </div>
+
+      {/* Create Modal */}
+      {createModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Create Personal Link</h2>
+              <button onClick={() => setCreateModal(false)}>
+                <X className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
+
+            <label className="block mb-2 text-sm font-medium">Username</label>
+            <input
+              type="text"
+              className="w-full border rounded p-2 mb-4"
+              value={linkForm.username}
+              onChange={e => setLinkForm({ ...linkForm, username: e.target.value })}
+              placeholder="@username"
+            />
+
+            <label className="block mb-2 text-sm font-medium">Referral Username (optional)</label>
+            <input
+              type="text"
+              className="w-full border rounded p-2 mb-4"
+              value={linkForm.referralUsername}
+              onChange={e => setLinkForm({ ...linkForm, referralUsername: e.target.value })}
+              placeholder="@referral_user"
+            />
+
+            <label className="block mb-2 text-sm font-medium">Referral Amount (optional)</label>
+            <input
+              type="number"
+              className="w-full border rounded p-2 mb-4"
+              value={linkForm.referralAmount}
+              onChange={e => setLinkForm({ ...linkForm, referralAmount: e.target.value })}
+              placeholder="10.00"
+            />
+
+            <div className="mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={!linkForm.isCustomProduct}
+                  onChange={() => setLinkForm({ ...linkForm, isCustomProduct: false })}
+                />
+                Select from existing products
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer mt-2">
+                <input
+                  type="radio"
+                  checked={linkForm.isCustomProduct}
+                  onChange={() => setLinkForm({ ...linkForm, isCustomProduct: true })}
+                />
+                Create custom product
+              </label>
+            </div>
+
+            {!linkForm.isCustomProduct ? (
+              <div className="mb-4">
+                <label className="block mb-2 text-sm font-medium">Select Product</label>
+                <div className="border rounded max-h-32 overflow-y-auto">
+                  {products.map(p => (
+                    <div
+                      key={p.id}
+                      className={`p-2 cursor-pointer hover:bg-gray-100 ${
+                        linkForm.productId === p.id ? 'bg-blue-50' : ''
+                      }`}
+                      onClick={() =>
+                        setLinkForm({ ...linkForm, productId: p.id, productTitle: p.title })
+                      }
                     >
-                      <Copy size={16} color="#3B82F6" strokeWidth={2} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.deleteLinkButton}
-                      onPress={() => handleDeletePersonalLink(link.id)}
-                    >
-                      <Trash2 size={16} color="#EF4444" strokeWidth={2} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyState}>
-              <EmptyState 
-                type="links" 
-                onAction={() => setCreateLinkModal(true)}
-                actionText="Create your first link"
-              />
-            </View>
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Create Link Modal */}
-      <Modal
-        visible={createLinkModal}
-        animationType="slide"
-        transparent={true}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Create Personal Link</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setCreateLinkModal(false)}
-              >
-                <X size={24} color="#6b7280" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView>
-              <View style={styles.formField}>
-                <Text style={styles.fieldLabel}>Username</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={linkForm.username}
-                  onChangeText={(text) => setLinkForm({ ...linkForm, username: text })}
-                  placeholder="@username"
+                      {p.title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                <label className="block mb-2 text-sm font-medium">Custom Product Title</label>
+                <input
+                  type="text"
+                  className="w-full border rounded p-2 mb-4"
+                  value={linkForm.customProductTitle}
+                  onChange={e => setLinkForm({ ...linkForm, customProductTitle: e.target.value })}
                 />
-              </View>
 
-              <View style={styles.formField}>
-                <Text style={styles.fieldLabel}>Referral Username (optional)</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={linkForm.referralUsername}
-                  onChangeText={(text) => setLinkForm({ ...linkForm, referralUsername: text })}
-                  placeholder="@referral_user"
+                <label className="block mb-2 text-sm font-medium">Custom Price (FBC)</label>
+                <input
+                  type="number"
+                  className="w-full border rounded p-2 mb-4"
+                  value={linkForm.customPrice}
+                  onChange={e => setLinkForm({ ...linkForm, customPrice: e.target.value })}
                 />
-              </View>
+              </>
+            )}
 
-              <View style={styles.formField}>
-                <Text style={styles.fieldLabel}>Referral Amount (optional)</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={linkForm.referralAmount}
-                  onChangeText={(text) => setLinkForm({ ...linkForm, referralAmount: text })}
-                  placeholder="10.00"
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <View style={styles.toggleSection}>
-                <TouchableOpacity
-                  style={styles.toggleOption}
-                  onPress={() => setLinkForm({ ...linkForm, isCustomProduct: false })}
-                >
-                  <View style={[styles.radioButton, !linkForm.isCustomProduct && styles.radioButtonSelected]}>
-                    {!linkForm.isCustomProduct && <View style={styles.radioButtonInner} />}
-                  </View>
-                  <Text style={styles.toggleText}>Select from existing products</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.toggleOption}
-                  onPress={() => setLinkForm({ ...linkForm, isCustomProduct: true })}
-                >
-                  <View style={[styles.radioButton, linkForm.isCustomProduct && styles.radioButtonSelected]}>
-                    {linkForm.isCustomProduct && <View style={styles.radioButtonInner} />}
-                  </View>
-                  <Text style={styles.toggleText}>Create custom product</Text>
-                </TouchableOpacity>
-              </View>
-
-              {!linkForm.isCustomProduct ? (
-                <View style={styles.formField}>
-                  <Text style={styles.fieldLabel}>Select Product</Text>
-                  <ScrollView style={styles.productSelector}>
-                    {getAllProducts().map((product) => (
-                      <TouchableOpacity
-                        key={product.id}
-                        style={[
-                          styles.productOption,
-                          linkForm.productId === product.id && styles.selectedProductOption
-                        ]}
-                        onPress={() => setLinkForm({ 
-                          ...linkForm, 
-                          productId: product.id, 
-                          productTitle: product.title 
-                        })}
-                      >
-                        <Text style={[
-                          styles.productOptionText,
-                          linkForm.productId === product.id && styles.selectedProductOptionText
-                        ]}>
-                          {product.title}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              ) : (
-                <>
-                  <View style={styles.formField}>
-                    <Text style={styles.fieldLabel}>Custom Product Title</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      value={linkForm.customProductTitle}
-                      onChangeText={(text) => setLinkForm({ ...linkForm, customProductTitle: text })}
-                      placeholder="Enter custom product title"
-                    />
-                  </View>
-                  
-                  <View style={styles.formField}>
-                    <Text style={styles.fieldLabel}>Custom Price (FBC)</Text>
-                    <TextInput
-                      style={styles.textInput}
-                      value={linkForm.customPrice}
-                      onChangeText={(text) => setLinkForm({ ...linkForm, customPrice: text })}
-                      placeholder="0.00"
-                      keyboardType="numeric"
-                    />
-                  </View>
-                </>
-              )}
-
-              <TouchableOpacity 
-                style={[
-                  styles.saveButton,
-                  (!linkForm.username.trim() || (!linkForm.productId && !linkForm.customProductTitle.trim())) && styles.disabledButton
-                ]} 
-                onPress={handleCreatePersonalLink}
-                disabled={!linkForm.username.trim() || (!linkForm.productId && !linkForm.customProductTitle.trim())}
-              >
-                <Save size={20} color="#ffffff" strokeWidth={2} />
-                <Text style={styles.saveButtonText}>Create Link</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+            <button
+              onClick={handleCreate}
+              disabled={!linkForm.username.trim() || (!linkForm.productId && !linkForm.customProductTitle.trim())}
+              className={`w-full flex items-center justify-center gap-2 py-2 rounded ${
+                !linkForm.username.trim() || (!linkForm.productId && !linkForm.customProductTitle.trim())
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              <Save className="w-5 h-5" /> Create Link
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 12,
-    minHeight: 44,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  headerSpacer: {
-    width: 44,
-  },
-  createSection: {
-    padding: 16,
-  },
-  createLinkButton: {
-    backgroundColor: '#10B981',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 18,
-    minHeight: 56,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  createLinkButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  linksSection: {
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 16,
-  },
-  linksContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-    overflow: 'hidden',
-  },
-  linkCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  linkInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  linkHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  linkUsername: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#3B82F6',
-  },
-  linkDate: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  linkProduct: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  linkUrl: {
-    fontSize: 12,
-    color: '#6b7280',
-    fontFamily: 'monospace',
-  },
-  linkActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  copyLinkButton: {
-    padding: 8,
-    marginRight: 4,
-  },
-  deleteLinkButton: {
-    padding: 8,
-  },
-  emptyState: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
-    width: '90%',
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  formField: {
-    marginBottom: 16,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#1f2937',
-    backgroundColor: '#ffffff',
-  },
-  toggleSection: {
-    marginBottom: 16,
-  },
-  toggleOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#d1d5db',
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioButtonSelected: {
-    borderColor: '#3B82F6',
-  },
-  radioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#3B82F6',
-  },
-  toggleText: {
-    fontSize: 16,
-    color: '#1f2937',
-  },
-  productSelector: {
-    maxHeight: 150,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    backgroundColor: '#ffffff',
-  },
-  productOption: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  selectedProductOption: {
-    backgroundColor: '#EBF4FF',
-  },
-  productOptionText: {
-    fontSize: 14,
-    color: '#1f2937',
-  },
-  selectedProductOptionText: {
-    color: '#3B82F6',
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: '#3B82F6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  saveButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  disabledButton: {
-    backgroundColor: '#d1d5db',
-  },
-});
