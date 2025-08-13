@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Search, Users, ChevronRight, CreditCard, X, CheckCircle, StickyNote, ChevronUp } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAppData } from '@/lib/store'
-import * as api from '@/lib/api'
+import * as api from '@/src/shared/api/methods'
 import { OfferCardSkeleton, PersonCardSkeleton } from '@/components/SkeletonLoader'
 import EmptyState from '@/components/EmptyState'
 
