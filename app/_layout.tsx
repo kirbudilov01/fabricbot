@@ -1,3 +1,4 @@
+// app/_layout.tsx
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -9,8 +10,9 @@ import ToastMessage from '@/components/ToastMessage';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ====== НАСТРОЙКИ API ======
-const API = 'https://fabricbot-backend1.vercel.app';
+// ===== API =====
+const API =
+  (process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'https://fabricbot-backend1.vercel.app');
 
 // Silence logs in production
 if (Platform.OS === 'web' && process.env.NODE_ENV === 'production') {
@@ -27,90 +29,94 @@ declare global {
   interface Window {
     Telegram?: {
       WebApp?: {
-        ready: () => void;
-        expand: () => void;
-        initData?: string; // <- важно
+        ready?: () => void;
+        expand?: () => void;
+        initData?: string;
       };
     };
   }
+}
+
+// --- helpers ---
+function getInitDataFromEnv(): string {
+  if (typeof window === 'undefined') return '';
+  // 1) Настоящий Mini App
+  const tgInit = window?.Telegram?.WebApp?.initData || '';
+  if (tgInit) return tgInit;
+  // 2) Dev-режим: из query (?initData=...)
+  const urlInit = new URLSearchParams(window.location.search).get('initData') || '';
+  return urlInit;
 }
 
 export default function RootLayout() {
   useFrameworkReady();
 
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: 'success' | 'error' | 'warning';
-    visible: boolean;
-  }>({
-    message: '',
-    type: 'success',
-    visible: false,
+  const [toast, setToast] = useState<{message: string; type: 'success' | 'error' | 'warning'; visible: boolean;}>({
+    message: '', type: 'success', visible: false,
   });
 
-  // === вспомогательный показ тостов
-  const showError = (msg: string) =>
-    setToast({ message: msg, type: 'error', visible: true });
+  // для наглядности покажем статус авторизации
+  const [authStatus, setAuthStatus] = useState<'idle' | 'ok' | 'error' | 'no-init'>('idle');
+  const [authError, setAuthError] = useState<string | null>(null);
 
+  const showError = (msg: string) => {
+    setToast({ message: msg, type: 'error', visible: true });
+  };
   const hideToast = () => setToast(prev => ({ ...prev, visible: false }));
 
   useEffect(() => {
-    // 1) проверяем, проходил ли онбординг
-    const checkOnboardingStatus = async () => {
+    // 1) проверяем онбординг
+    (async () => {
       try {
         const onboardingStatus = await AsyncStorage.getItem('hasOnboarded');
         setHasOnboarded(onboardingStatus === 'true');
       } catch {
         setHasOnboarded(false);
       }
-    };
-    checkOnboardingStatus();
+    })();
 
-    // 2) прокидываем глобальный колбэк для тостов
-    setToastCallback((message, type) => {
-      setToast({ message, type, visible: true });
-    });
+    // 2) тосты
+    setToastCallback((message, type) => setToast({ message, type, visible: true }));
 
-    // 3) инициализируем Telegram WebApp (визуал)
+    // 3) визуальный init Telegram
     if (Platform.OS === 'web' && typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
       try {
-        tg.ready?.();
-        tg.expand?.();
+        window.Telegram.WebApp.ready?.();
+        window.Telegram.WebApp.expand?.();
       } catch {}
     }
   }, []);
 
-  // === АВТО-ЛОГИН В БЭК ПРИ СТАРТЕ MINI APP ===
+  // === авто-логин ===
   useEffect(() => {
     (async () => {
       try {
-        if (!(Platform.OS === 'web') || typeof window === 'undefined') return;
-        const initData = window.Telegram?.WebApp?.initData || '';
+        if (Platform.OS !== 'web' || typeof window === 'undefined') return;
 
+        const initData = getInitDataFromEnv();
         if (!initData) {
-          // приложение открыто не внутри Telegram
-          // Покажем подсказку, но не ломаем UI
-          showError('Откройте приложение внутри Telegram (initData пустой).');
+          setAuthStatus('no-init'); // не из TG и без ?initData
           return;
         }
 
+        setAuthStatus('idle');
         const resp = await fetch(`${API}/api/auth/telegram`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ initData }),
         });
-        const json = await resp.json().catch(() => ({}));
+        const json = await resp.json().catch(() => ({} as any));
         if (!resp.ok || !json?.ok) {
-          throw new Error(json?.error || 'Auth failed');
+          throw new Error(json?.error || `Auth failed (${resp.status})`);
         }
-
-        // json.user — профиль, json.last_joined — последние 7
-        // при желании можно сохранить их в глобальное состояние/контекст
-        // console.log('me:', json.user);
-        // console.log('last7:', json.last_joined);
+        setAuthStatus('ok');
+        setAuthError(null);
+        // тут можно сохранить json.user в контекст/стейт при желании
+        // console.log('me:', json.user, 'last7:', json.last_joined);
       } catch (e: any) {
+        setAuthStatus('error');
+        setAuthError(e?.message || 'Ошибка авторизации');
         showError(e?.message || 'Ошибка авторизации');
       }
     })();
@@ -118,7 +124,7 @@ export default function RootLayout() {
 
   const handleOnboardingComplete = () => setHasOnboarded(true);
 
-  // Show loading state while checking onboarding status
+  // loading пока проверяем онбординг
   if (hasOnboarded === null) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
@@ -127,10 +133,35 @@ export default function RootLayout() {
     );
   }
 
-  // Show onboarding if not completed
+  // онбординг
   if (!hasOnboarded) {
     return <OnboardingFlow onComplete={handleOnboardingComplete} />;
   }
+
+  const Banner = () => {
+    if (authStatus === 'no-init') {
+      return (
+        <div style={{ background: '#fff3cd', color: '#664d03', padding: 8, textAlign: 'center' }}>
+          Откройте приложение внутри Telegram или добавьте <code>?initData=...</code> в URL для теста в браузере.
+        </div>
+      );
+    }
+    if (authStatus === 'error') {
+      return (
+        <div style={{ background: '#f8d7da', color: '#842029', padding: 8, textAlign: 'center' }}>
+          Ошибка авторизации: {authError}
+        </div>
+      );
+    }
+    if (authStatus === 'ok') {
+      return (
+        <div style={{ background: '#d1e7dd', color: '#0f5132', padding: 8, textAlign: 'center' }}>
+          Авторизация успешна
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -142,16 +173,14 @@ export default function RootLayout() {
           backgroundColor: '#F7F8FA',
         }}
       >
+        {/* Статус авторизации для наглядности */}
+        {Platform.OS === 'web' && <Banner />}
+
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
-        <ToastMessage
-          message={toast.message}
-          type={toast.type}
-          visible={toast.visible}
-          onHide={hideToast}
-        />
+        <ToastMessage message={toast.message} type={toast.type} visible={toast.visible} onHide={hideToast} />
       </View>
     </SafeAreaView>
   );
